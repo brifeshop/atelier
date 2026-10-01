@@ -3,6 +3,7 @@
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Master\CustomerController;
+use App\Http\Controllers\Master\SupplierController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -22,6 +23,11 @@ Route::middleware('auth')->group(function () {
 
 Route::middleware(['auth', 'verified'])->prefix('master')->name('master.')->group(function () {
     Route::resource('customers', CustomerController::class);
+});
+
+Route::middleware(['auth', 'verified'])->prefix('master')->name('master.')->group(function () {
+    Route::resource('customers', CustomerController::class);
+    Route::resource('suppliers', SupplierController::class);
 });
 
 require __DIR__.'/auth.php';
