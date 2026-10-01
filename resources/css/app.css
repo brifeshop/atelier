@@ -1,3 +1,114 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* ============================================ */
+/* ATELIER — LASER EFFECTS */
+/* ============================================ */
+
+/* Laser Line — garis horizontal yang menyala */
+.laser-line {
+    position: relative;
+    height: 2px;
+    background: linear-gradient(90deg, 
+        transparent 0%, 
+        rgba(201, 169, 97, 0.3) 15%, 
+        rgba(201, 169, 97, 1) 50%, 
+        rgba(201, 169, 97, 0.3) 85%, 
+        transparent 100%
+    );
+    box-shadow: 
+        0 0 8px rgba(201, 169, 97, 0.6),
+        0 0 20px rgba(201, 169, 97, 0.3);
+}
+
+/* Laser pulse — animasi denyut */
+@keyframes laser-pulse {
+    0%, 100% { 
+        opacity: 1;
+        box-shadow: 
+            0 0 8px rgba(201, 169, 97, 0.6),
+            0 0 20px rgba(201, 169, 97, 0.3);
+    }
+    50% { 
+        opacity: 0.85;
+        box-shadow: 
+            0 0 12px rgba(201, 169, 97, 0.8),
+            0 0 30px rgba(201, 169, 97, 0.4);
+    }
+}
+
+.laser-line-pulse {
+    animation: laser-pulse 3s ease-in-out infinite;
+}
+
+/* Laser dot — titik di ujung garis */
+.laser-dot {
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #C9A961;
+    box-shadow: 
+        0 0 8px #C9A961,
+        0 0 16px rgba(201, 169, 97, 0.8),
+        0 0 24px rgba(201, 169, 97, 0.4);
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.laser-dot-left { left: 0; }
+.laser-dot-right { right: 0; }
+
+/* Segment header */
+.segment-header {
+    position: relative;
+    padding-top: 1rem;
+}
+
+/* Corner brackets — sudut siku seperti HUD */
+.corner-bracket {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    border-color: rgba(201, 169, 97, 0.5);
+}
+
+.corner-bracket-tl {
+    top: 0; left: 0;
+    border-top: 1.5px solid;
+    border-left: 1.5px solid;
+}
+
+.corner-bracket-tr {
+    top: 0; right: 0;
+    border-top: 1.5px solid;
+    border-right: 1.5px solid;
+}
+
+.corner-bracket-bl {
+    bottom: 0; left: 0;
+    border-bottom: 1.5px solid;
+    border-left: 1.5px solid;
+}
+
+.corner-bracket-br {
+    bottom: 0; right: 0;
+    border-bottom: 1.5px solid;
+    border-right: 1.5px solid;
+}
+
+/* Glow text untuk nomor segmen */
+.glow-gold {
+    text-shadow: 
+        0 0 8px rgba(201, 169, 97, 0.6),
+        0 0 16px rgba(201, 169, 97, 0.3);
+}
+
+/* Subtle grid background */
+.grid-bg {
+    background-image: 
+        linear-gradient(rgba(201, 169, 97, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(201, 169, 97, 0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+}
