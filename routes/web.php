@@ -7,6 +7,8 @@ use App\Http\Controllers\Master\SupplierController;
 use App\Http\Controllers\Master\EmployeeController;
 use App\Http\Controllers\Master\MachineController;
 use App\Http\Controllers\Master\MaterialController;
+use App\Http\Controllers\Master\ProductController;
+use App\Http\Controllers\Master\WorkCenterController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -52,6 +54,8 @@ Route::middleware(['auth', 'verified'])->prefix('master')->name('master.')->grou
     Route::resource('employees', EmployeeController::class);
     Route::resource('machines', MachineController::class);
     Route::resource('materials', MaterialController::class);
+    Route::resource('products', ProductController::class); 
+    Route::resource('work-centers', WorkCenterController::class);
 });
 
 require __DIR__.'/auth.php';
