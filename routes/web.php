@@ -4,6 +4,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Master\CustomerController;
 use App\Http\Controllers\Master\SupplierController;
+use App\Http\Controllers\Master\EmployeeController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -28,6 +29,12 @@ Route::middleware(['auth', 'verified'])->prefix('master')->name('master.')->grou
 Route::middleware(['auth', 'verified'])->prefix('master')->name('master.')->group(function () {
     Route::resource('customers', CustomerController::class);
     Route::resource('suppliers', SupplierController::class);
+});
+
+Route::middleware(['auth', 'verified'])->prefix('master')->name('master.')->group(function () {
+    Route::resource('customers', CustomerController::class);
+    Route::resource('suppliers', SupplierController::class);
+    Route::resource('employees', EmployeeController::class);
 });
 
 require __DIR__.'/auth.php';
