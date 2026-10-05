@@ -19,6 +19,7 @@ class Product extends Model
         'description',
         'selling_price',
         'notes',
+        'photo_path',
         'is_active',
     ];
 
@@ -35,6 +36,12 @@ class Product extends Model
         $last = self::orderBy('id', 'desc')->first();
         $lastNumber = $last ? (int) substr($last->kode, -4) : 0;
         return 'PRD-' . str_pad($lastNumber + 1, 4, '0', STR_PAD_LEFT);
+    }
+
+    public function getPhotoUrlAttribute(): ?string
+    {
+        if (!$this->photo_path) return null;
+        return asset('storage/' . $this->photo_path);
     }
 
     /**

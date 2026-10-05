@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Master;
 use App\Http\Controllers\BaseCrudController;
 use App\Models\Master\Material;
 use App\Models\Master\Supplier;
+use App\Helpers\UploadHelper;
 use Illuminate\Http\Request;
 
 class MaterialController extends BaseCrudController
@@ -28,6 +29,7 @@ class MaterialController extends BaseCrudController
         'supplier_id' => 'nullable|exists:suppliers,id',
         'location' => 'nullable|string|max:100',
         'notes' => 'nullable|string',
+        'photo' => 'nullable|image|max:2048',
         'is_active' => 'boolean',
     ];
 
@@ -71,6 +73,17 @@ class MaterialController extends BaseCrudController
             $validated['kode'] = Material::generateKode();
         }
 
+        // Handle photo upload
+        if ($request->hasFile('photo')) {
+            $validated['photo_path'] = UploadHelper::uploadPhoto(
+                $request->file('photo'),
+                'materials',
+                $validated['kode']
+            );
+        }
+
+        unset($validated['photo']); // hapus field 'photo' dari array
+
         $validated['is_active'] = $request->boolean('is_active', true);
 
         Material::create($validated);
@@ -100,6 +113,18 @@ class MaterialController extends BaseCrudController
         $rules['kode'] = 'required|string|max:50|unique:materials,kode,' . $material->id;
 
         $validated = $request->validate($rules);
+
+        // Handle photo upload
+        if ($request->hasFile('photo')) {
+            $validated['photo_path'] = UploadHelper::uploadPhoto(
+                $request->file('photo'),
+                'materials',
+                $validated['kode'],
+                $material->photo_path
+            );
+        }
+
+        unset($validated['photo']);
 
         $validated['is_active'] = $request->boolean('is_active', true);
 

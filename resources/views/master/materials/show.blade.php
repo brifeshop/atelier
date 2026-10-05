@@ -13,6 +13,18 @@
             :actionUrl="route('master.materials.edit', $item)"
         />
 
+        {{-- FOTO --}}
+        @if($item->photo_url)
+            <x-atelier.card title="Foto Material" :brackets="true">
+                <div class="flex justify-center">
+                    <img src="{{ $item->photo_url }}"
+                         alt="{{ $item->nama }}"
+                         class="max-w-md w-full rounded-lg border border-navy-700">
+                </div>
+            </x-atelier.card>
+        @endif
+
+        {{-- INFORMASI --}}
         <x-atelier.card title="Informasi Material" :brackets="true">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
@@ -58,6 +70,7 @@
             </div>
         </x-atelier.card>
 
+        {{-- STOK --}}
         <x-atelier.card title="Stok" :brackets="true">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 @php $isLow = $item->current_stock <= $item->min_stock; @endphp
@@ -95,12 +108,14 @@
             </div>
         </x-atelier.card>
 
+        {{-- CATATAN --}}
         @if($item->notes)
             <x-atelier.card title="Catatan" :brackets="true">
                 <p class="text-sm text-navy-300">{{ $item->notes }}</p>
             </x-atelier.card>
         @endif
 
+        {{-- ACTIONS --}}
         <div class="flex items-center justify-between gap-3">
             <x-atelier.button :href="route('master.materials.index')" variant="ghost">Kembali</x-atelier.button>
             <form method="POST" action="{{ route('master.materials.destroy', $item) }}" onsubmit="return confirm('Yakin hapus material ini?')">

@@ -23,6 +23,7 @@ class Material extends Model
         'supplier_id',
         'location',
         'notes',
+        'photo_path',
         'is_active',
     ];
 
@@ -58,6 +59,15 @@ class Material extends Model
     public function scopeActive($query)
     {
         return $query->where('is_active', true);
+    }
+
+    /**
+     * URL foto material
+     */
+    public function getPhotoUrlAttribute(): ?string
+    {
+        if (!$this->photo_path) return null;
+        return asset('storage/' . $this->photo_path);
     }
 
     /**

@@ -13,6 +13,18 @@
             :actionUrl="route('master.products.edit', $item)"
         />
 
+        {{-- FOTO --}}
+        @if($item->photo_url)
+            <x-atelier.card title="Foto Product" :brackets="true">
+                <div class="flex justify-center">
+                    <img src="{{ $item->photo_url }}"
+                         alt="{{ $item->nama }}"
+                         class="max-w-md w-full rounded-lg border border-navy-700">
+                </div>
+            </x-atelier.card>
+        @endif
+
+        {{-- INFORMASI --}}
         <x-atelier.card title="Informasi Produk" :brackets="true">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>

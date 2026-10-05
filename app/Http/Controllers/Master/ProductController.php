@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Master;
 
 use App\Http\Controllers\BaseCrudController;
 use App\Models\Master\Product;
+use App\Helpers\UploadHelper;
 use Illuminate\Http\Request;
 
 class ProductController extends BaseCrudController
@@ -23,6 +24,7 @@ class ProductController extends BaseCrudController
         'description' => 'nullable|string',
         'selling_price' => 'nullable|numeric|min:0',
         'notes' => 'nullable|string',
+        'photo' => 'nullable|image|max:2048',
         'is_active' => 'boolean',
     ];
 
@@ -43,6 +45,16 @@ class ProductController extends BaseCrudController
             $validated['kode'] = Product::generateKode();
         }
 
+        if ($request->hasFile('photo')) {
+            $validated['photo_path'] = UploadHelper::uploadPhoto(
+                $request->file('photo'),
+                'products',
+                $validated['kode']
+            );
+        }
+
+        unset($validated['photo']);
+
         $validated['is_active'] = $request->boolean('is_active', true);
 
         Product::create($validated);
@@ -60,6 +72,17 @@ class ProductController extends BaseCrudController
         $rules['kode'] = 'required|string|max:50|unique:products,kode,' . $product->id;
 
         $validated = $request->validate($rules);
+
+        if ($request->hasFile('photo')) {
+            $validated['photo_path'] = UploadHelper::uploadPhoto(
+                $request->file('photo'),
+                'products',
+                $validated['kode'],
+                $product->photo_path
+            );
+        }
+
+        unset($validated['photo']);
 
         $validated['is_active'] = $request->boolean('is_active', true);
 
