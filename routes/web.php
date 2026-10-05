@@ -12,6 +12,11 @@ use App\Http\Controllers\Master\WorkCenterController;
 
 use App\Http\Controllers\Sales\SalesOrderController;
 
+use App\Http\Controllers\Warehouse\WarehouseController;
+use App\Http\Controllers\Warehouse\LocationController;
+use App\Http\Controllers\Warehouse\InventoryController;
+use App\Http\Controllers\Warehouse\StockMovementController;
+
 use Illuminate\Support\Facades\Route;
 
 
@@ -65,6 +70,32 @@ Route::middleware(['auth', 'verified'])->prefix('sales')->name('sales.')->group(
     Route::resource('sales-orders', SalesOrderController::class);
     Route::patch('sales-orders/{sales_order}/status', [SalesOrderController::class, 'updateStatus'])
         ->name('sales-orders.update-status');
+});
+
+Route::middleware(['auth', 'verified'])->prefix('warehouse')->name('warehouse.')->group(function () {
+    Route::resource('warehouses', WarehouseController::class);
+});
+
+Route::middleware(['auth', 'verified'])->prefix('warehouse')->name('warehouse.')->group(function () {
+    Route::resource('warehouses', WarehouseController::class);
+    Route::resource('locations', LocationController::class);   // ← TAMBAHKAN
+});
+
+Route::middleware(['auth', 'verified'])->prefix('warehouse')->name('warehouse.')->group(function () {
+    Route::resource('warehouses', WarehouseController::class);
+    Route::resource('locations', LocationController::class);
+    Route::resource('inventories', InventoryController::class)->only(['index', 'show', 'update']);
+});
+
+Route::middleware(['auth', 'verified'])->prefix('warehouse')->name('warehouse.')->group(function () {
+    Route::resource('warehouses', WarehouseController::class);
+    Route::resource('locations', LocationController::class);
+    Route::resource('inventories', InventoryController::class)->only(['index', 'show', 'update']);
+    Route::resource('stock-movements', StockMovementController::class)->only(['index', 'create', 'store', 'show']);
+    Route::get('stock-movements/transfer/create', [StockMovementController::class, 'createTransfer'])
+        ->name('stock-movements.transfer.create');
+    Route::post('stock-movements/transfer', [StockMovementController::class, 'storeTransfer'])
+        ->name('stock-movements.transfer.store');
 });
 
 require __DIR__.'/auth.php';
