@@ -18,6 +18,8 @@ use App\Http\Controllers\Warehouse\InventoryController;
 use App\Http\Controllers\Warehouse\StockMovementController;
 
 use App\Http\Controllers\Purchasing\PurchaseRequisitionController;
+use App\Http\Controllers\Purchasing\PurchaseOrderController;
+use App\Http\Controllers\Purchasing\GoodsReceiptController;
 
 use Illuminate\Support\Facades\Route;
 
@@ -106,6 +108,25 @@ Route::middleware(['auth', 'verified'])->prefix('purchasing')->name('purchasing.
         ->name('purchase-requisitions.approve');
     Route::patch('purchase-requisitions/{purchase_requisition}/reject', [PurchaseRequisitionController::class, 'reject'])
         ->name('purchase-requisitions.reject');
+});
+
+Route::middleware(['auth', 'verified'])->prefix('purchasing')->name('purchasing.')->group(function () {
+    Route::resource('purchase-requisitions', PurchaseRequisitionController::class);
+    Route::patch('purchase-requisitions/{purchase_requisition}/approve', [PurchaseRequisitionController::class, 'approve'])
+        ->name('purchase-requisitions.approve');
+    Route::patch('purchase-requisitions/{purchase_requisition}/reject', [PurchaseRequisitionController::class, 'reject'])
+        ->name('purchase-requisitions.reject');
+
+    Route::resource('purchase-orders', PurchaseOrderController::class);
+    Route::patch('purchase-orders/{purchase_order}/send', [PurchaseOrderController::class, 'send'])
+        ->name('purchase-orders.send');
+    Route::patch('purchase-orders/{purchase_order}/cancel', [PurchaseOrderController::class, 'cancel'])
+        ->name('purchase-orders.cancel');
+
+    Route::resource('goods-receipts', GoodsReceiptController::class);
+    Route::patch('goods-receipts/{goods_receipt}/receive', [GoodsReceiptController::class, 'receive'])
+        ->name('goods-receipts.receive');
+
 });
 
 require __DIR__.'/auth.php';

@@ -96,4 +96,36 @@ class PurchaseRequisition extends Model
     {
         return $this->status === 'draft' && $this->items->count() > 0;
     }
+
+    /**
+     * Total item yang sudah di-PO
+     */
+    public function getOrderedItemsCountAttribute(): int
+    {
+        return $this->items->filter(fn($i) => $i->is_fully_ordered)->count();
+    }
+
+    /**
+     * Total item yang belum di-PO
+     */
+    public function getPendingItemsCountAttribute(): int
+    {
+        return $this->items->filter(fn($i) => $i->is_pending)->count();
+    }
+
+    /**
+     * Semua item sudah di-PO?
+     */
+    public function getIsFullyOrderedAttribute(): bool
+    {
+        return $this->items->every(fn($i) => $i->is_fully_ordered);
+    }
+
+    /**
+     * Bisa dibuat PO?
+     */
+    public function canCreatePO(): bool
+    {
+        return $this->status === 'approved' && $this->pending_items_count > 0;
+    }
 }

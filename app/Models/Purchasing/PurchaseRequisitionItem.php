@@ -32,4 +32,41 @@ class PurchaseRequisitionItem extends Model
     {
         return $this->belongsTo(Material::class);
     }
+
+    public function purchaseOrderItems()
+    {
+        return $this->hasMany(PurchaseOrderItem::class, 'purchase_requisition_item_id');
+    }
+
+    /**
+ * Total qty yang sudah di-PO
+ */
+public function getOrderedQtyAttribute(): float
+{
+    return $this->purchaseOrderItems->sum('qty');
+}
+
+/**
+ * Sisa qty yang belum di-PO
+ */
+public function getRemainingQtyAttribute(): float
+{
+    return max(0, $this->qty - $this->ordered_qty);
+}
+
+/**
+ * Sudah di-PO semua?
+ */
+public function getIsFullyOrderedAttribute(): bool
+{
+    return $this->ordered_qty >= $this->qty;
+}
+
+/**
+ * Belum di-PO?
+ */
+public function getIsPendingAttribute(): bool
+{
+    return $this->ordered_qty < $this->qty;
+}
 }
