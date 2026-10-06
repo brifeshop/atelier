@@ -33,7 +33,7 @@
             </div>
             <div class="bg-navy-900/50 border border-navy-800 rounded-xl p-5">
                 <p class="text-[10px] font-mono text-navy-400 uppercase tracking-widest mb-1">Total Value</p>
-                <p class="font-serif text-2xl font-bold text-white">Rp 0</p>
+                <p class="font-serif text-2xl font-bold text-white">{{ format_rupiah($stats['total_value']) }}</p>
             </div>
         </div>
 
@@ -83,6 +83,7 @@
                                 <th class="px-5 py-3 text-right text-[10px] font-mono font-semibold text-navy-400 uppercase tracking-widest">Qty</th>
                                 <th class="px-5 py-3 text-right text-[10px] font-mono font-semibold text-navy-400 uppercase tracking-widest">Min / Max</th>
                                 <th class="px-5 py-3 text-left text-[10px] font-mono font-semibold text-navy-400 uppercase tracking-widest">Status</th>
+                                <th class="px-5 py-3 text-right text-[10px] font-mono font-semibold text-navy-400 uppercase tracking-widest">Value</th>
                                 <th class="px-5 py-3 text-right text-[10px] font-mono font-semibold text-navy-400 uppercase tracking-widest">Aksi</th>
                             </tr>
                         </thead>
@@ -135,6 +136,9 @@
                                                 <span class="w-1.5 h-1.5 rounded-full bg-navy-500"></span>Kosong
                                             </span>
                                         @endif
+                                    </td>
+                                    <td class="px-5 py-3 text-right font-mono text-sm text-gold-500">
+                                        {{ format_rupiah($inv->total_value) }}
                                     </td>
                                     <td class="px-5 py-3 text-right">
                                         <x-atelier.button :href="route('warehouse.inventories.show', $inv)" variant="ghost" size="sm">Detail</x-atelier.button>

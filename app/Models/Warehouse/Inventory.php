@@ -92,4 +92,29 @@ class Inventory extends Model
             ]
         );
     }
+    /**
+ * Harga per unit (dari material atau product)
+ */
+public function getUnitPriceAttribute(): float
+{
+    if (!$this->item) return 0;
+
+    if ($this->item_type === 'material') {
+        return (float) ($this->item->price ?? 0);
+    }
+
+    if ($this->item_type === 'product') {
+        return (float) ($this->item->selling_price ?? 0);
+    }
+
+    return 0;
+}
+
+/**
+ * Total nilai = qty × unit_price
+ */
+public function getTotalValueAttribute(): float
+{
+    return (float) $this->qty * $this->unit_price;
+}
 }

@@ -16,53 +16,70 @@ class InventoryController extends Controller
      * List semua inventory
      */
     public function index(Request $request)
-    {
-        $query = Inventory::with(['location.warehouse', 'item']);
+        {
+            $query = Inventory::with(['location.warehouse', 'item']);
 
-        // Filter by warehouse
-        if ($request->filled('warehouse_id')) {
-            $query->whereHas('location', function ($q) use ($request) {
-                $q->where('warehouse_id', $request->warehouse_id);
-            });
-        }
-
-        // Filter by type
-        if ($request->filled('item_type')) {
-            $query->where('item_type', $request->item_type);
-        }
-
-        // Filter low stock
-        if ($request->filled('low_stock')) {
-            $query->lowStock();
-        }
-
-        // Search
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where(function ($q) use ($search) {
-                $q->whereHas('item', function ($q2) use ($search) {
-                    $q2->where('nama', 'like', "%{$search}%")
-                       ->orWhere('kode', 'like', "%{$search}%");
+            // Filter by warehouse
+            if ($request->filled('warehouse_id')) {
+                $query->whereHas('location', function ($q) use ($request) {
+                    $q->where('warehouse_id', $request->warehouse_id);
                 });
+            }
+
+            // Filter by type
+            if ($request->filled('item_type')) {
+                $query->where('item_type', $request->item_type);
+            }
+
+            // Filter low stock
+            if ($request->filled('low_stock')) {
+                $query->lowStock();
+            }
+
+            // Search
+            if ($request->filled('search')) {
+                $search = $request->search;
+                $query->where(function ($q) use ($search) {
+                    $q->whereHas('item', function ($q2) use ($search) {
+                        $q2->where('nama', 'like', "%{$search}%")
+                        ->orWhere('kode', 'like', "%{$search}%");
+                    });
+                });
+            }
+
+            $items = $query->latest('last_movement_at')->paginate(15);
+
+            // Hitung total value dari SEMUA inventory (bukan cuma yang di halaman ini)
+            $totalValue = 0;
+            Inventory::with('item')->where('qty', '>', 0)->chunk(100, function ($inventories) use (&$totalValue) {
+                foreach ($inventories as $inv) {
+                    if (!$inv->item) continue;
+                    
+                    $price = 0;
+                    if ($inv->item_type === 'material') {
+                        $price = (float) ($inv->item->price ?? 0);
+                    } elseif ($inv->item_type === 'product') {
+                        $price = (float) ($inv->item->selling_price ?? 0);
+                    }
+                    
+                    $totalValue += (float) $inv->qty * $price;
+                }
             });
+
+            // Stats
+            $stats = [
+                'total_items' => Inventory::where('qty', '>', 0)->count(),
+                'total_locations' => Location::active()->count(),
+                'low_stock_count' => Inventory::lowStock()->count(),
+                'total_value' => $totalValue,
+            ];
+
+            return view('warehouse.inventories.index', [
+                'items' => $items,
+                'stats' => $stats,
+                'warehouses' => Warehouse::active()->orderBy('nama')->get(),
+            ]);
         }
-
-        $items = $query->latest('last_movement_at')->paginate(15);
-
-        // Stats
-        $stats = [
-            'total_items' => Inventory::where('qty', '>', 0)->count(),
-            'total_locations' => Location::active()->count(),
-            'low_stock_count' => Inventory::lowStock()->count(),
-            'total_value' => 0, // nanti dihitung
-        ];
-
-        return view('warehouse.inventories.index', [
-            'items' => $items,
-            'stats' => $stats,
-            'warehouses' => Warehouse::active()->orderBy('nama')->get(),
-        ]);
-    }
 
     /**
      * Show detail inventory
