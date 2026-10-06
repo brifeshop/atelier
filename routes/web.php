@@ -17,6 +17,8 @@ use App\Http\Controllers\Warehouse\LocationController;
 use App\Http\Controllers\Warehouse\InventoryController;
 use App\Http\Controllers\Warehouse\StockMovementController;
 
+use App\Http\Controllers\Purchasing\PurchaseRequisitionController;
+
 use Illuminate\Support\Facades\Route;
 
 
@@ -96,6 +98,14 @@ Route::middleware(['auth', 'verified'])->prefix('warehouse')->name('warehouse.')
         ->name('stock-movements.transfer.create');
     Route::post('stock-movements/transfer', [StockMovementController::class, 'storeTransfer'])
         ->name('stock-movements.transfer.store');
+});
+
+Route::middleware(['auth', 'verified'])->prefix('purchasing')->name('purchasing.')->group(function () {
+    Route::resource('purchase-requisitions', PurchaseRequisitionController::class);
+    Route::patch('purchase-requisitions/{purchase_requisition}/approve', [PurchaseRequisitionController::class, 'approve'])
+        ->name('purchase-requisitions.approve');
+    Route::patch('purchase-requisitions/{purchase_requisition}/reject', [PurchaseRequisitionController::class, 'reject'])
+        ->name('purchase-requisitions.reject');
 });
 
 require __DIR__.'/auth.php';
