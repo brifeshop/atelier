@@ -31,6 +31,8 @@ use App\Http\Controllers\Purchasing\SupplierEvaluationController;
 use App\Http\Controllers\Engineering\BomController;
 use App\Http\Controllers\Engineering\RoutingController;
 
+use App\Http\Controllers\Production\WorkOrderController;
+
 use Illuminate\Support\Facades\Route;
 
 
@@ -173,4 +175,22 @@ Route::middleware(['auth', 'verified'])->prefix('engineering')->name('engineerin
     Route::delete('routings/{routing}/steps/{step}', [RoutingController::class, 'removeStep'])
         ->name('routings.steps.destroy');
 });
+
+// ==================== PRODUCTION ====================
+Route::middleware(['auth', 'verified'])->prefix('production')->name('production.')->group(function () {
+    
+    // Work Orders
+    Route::resource('work-orders', WorkOrderController::class);
+    Route::patch('work-orders/{work_order}/release', [WorkOrderController::class, 'release'])
+        ->name('work-orders.release');
+    Route::patch('work-orders/{work_order}/start', [WorkOrderController::class, 'start'])
+        ->name('work-orders.start');
+    Route::patch('work-orders/{work_order}/complete', [WorkOrderController::class, 'complete'])
+        ->name('work-orders.complete');
+    Route::patch('work-orders/{work_order}/cancel', [WorkOrderController::class, 'cancel'])
+        ->name('work-orders.cancel');
+    Route::post('work-orders/{work_order}/recalculate', [WorkOrderController::class, 'recalculate'])
+        ->name('work-orders.recalculate');
+});
+
 require __DIR__.'/auth.php';
