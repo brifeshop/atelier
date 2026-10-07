@@ -11,6 +11,8 @@ use App\Models\Sales\SalesOrder;
 use App\Services\WorkOrderService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Services\CostingService;
+use App\Models\Production\CostSnapshot;
 
 class WorkOrderController extends Controller
 {
@@ -220,11 +222,23 @@ class WorkOrderController extends Controller
             return back()->with('error', 'WO harus dalam status in_progress untuk diselesaikan.');
         }
 
-        WorkOrderService::complete($workOrder);
+        DB::beginTransaction();
+        try {
+            // Complete WO
+            WorkOrderService::complete($workOrder);
 
-        return redirect()
-            ->route('production.work-orders.show', $workOrder)
-            ->with('success', 'Work Order berhasil diselesaikan.');
+            // Create cost snapshot
+            CostingService::createSnapshot($workOrder->fresh());
+
+            DB::commit();
+
+            return redirect()
+                ->route('production.work-orders.show', $workOrder)
+                ->with('success', 'Work Order selesai. Cost snapshot sudah dibuat.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Gagal complete WO: ' . $e->getMessage());
+        }
     }
 
     public function cancel(WorkOrder $workOrder)
@@ -248,6 +262,20 @@ class WorkOrderController extends Controller
             return back()->with('success', 'Cost WO berhasil dihitung ulang.');
         } catch (\Exception $e) {
             return back()->with('error', 'Gagal recalculate: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Manual trigger untuk buat cost snapshot
+     */
+    public function snapshot(WorkOrder $workOrder)
+    {
+        try {
+            CostingService::createSnapshot($workOrder);
+
+            return back()->with('success', 'Cost snapshot berhasil dibuat.');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Gagal buat snapshot: ' . $e->getMessage());
         }
     }
 }

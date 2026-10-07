@@ -119,7 +119,7 @@
                             ['route' => 'engineering.boms.index', 'label' => 'Bill of Materials', 'icon' => 'M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10', 'group' => 'Produksi'],
                             ['route' => 'engineering.routings.index', 'label' => 'Routing', 'icon' => 'M13 10V3L4 14h7v7l9-11h-7z', 'group' => 'Produksi'],
                             ['route' => 'production.work-orders.index', 'label' => 'Work Order', 'icon' => 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2', 'group' => 'Produksi'],
-                            ['route' => null, 'label' => 'HPP & Costing', 'icon' => 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z', 'group' => 'Produksi'],
+                            ['route' => 'production.costing.index', 'label' => 'HPP & Costing', 'icon' => 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z', 'group' => 'Produksi'],
                             ['route' => null, 'label' => 'Quality Control', 'icon' => 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z', 'group' => 'Produksi'],
 
                             // Pengiriman

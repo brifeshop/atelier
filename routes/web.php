@@ -32,6 +32,7 @@ use App\Http\Controllers\Engineering\BomController;
 use App\Http\Controllers\Engineering\RoutingController;
 
 use App\Http\Controllers\Production\WorkOrderController;
+use App\Http\Controllers\Production\CostingController;
 
 use Illuminate\Support\Facades\Route;
 
@@ -176,10 +177,10 @@ Route::middleware(['auth', 'verified'])->prefix('engineering')->name('engineerin
         ->name('routings.steps.destroy');
 });
 
-// ==================== PRODUCTION ====================
-Route::middleware(['auth', 'verified'])->prefix('production')->name('production.')->group(function () {
+    // ==================== PRODUCTION ====================
+    Route::middleware(['auth', 'verified'])->prefix('production')->name('production.')->group(function () {
     
-    // Work Orders
+        // Work Orders
     Route::resource('work-orders', WorkOrderController::class);
     Route::patch('work-orders/{work_order}/release', [WorkOrderController::class, 'release'])
         ->name('work-orders.release');
@@ -191,6 +192,17 @@ Route::middleware(['auth', 'verified'])->prefix('production')->name('production.
         ->name('work-orders.cancel');
     Route::post('work-orders/{work_order}/recalculate', [WorkOrderController::class, 'recalculate'])
         ->name('work-orders.recalculate');
+    
+        // Costing
+    Route::get('costing', [CostingController::class, 'index'])->name('costing.index');
+    Route::get('costing/variance', [CostingController::class, 'variance'])->name('costing.variance');
+    Route::get('costing/margin', [CostingController::class, 'margin'])->name('costing.margin');
+    Route::get('costing/{cost_snapshot}', [CostingController::class, 'show'])->name('costing.show');
+    Route::get('costing-export', [CostingController::class, 'export'])->name('costing.export');
+
+        // Snapshot manual dari WO
+    Route::post('work-orders/{work_order}/snapshot', [WorkOrderController::class, 'snapshot'])
+        ->name('work-orders.snapshot');
 });
 
 require __DIR__.'/auth.php';
