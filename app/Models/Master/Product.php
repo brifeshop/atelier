@@ -44,6 +44,11 @@ class Product extends Model
         return asset('storage/' . $this->photo_path);
     }
 
+    public function workOrders()
+    {
+        return $this->hasMany(\App\Models\Production\WorkOrder::class);
+    }
+
     /**
      * Scope: hanya product aktif
      */

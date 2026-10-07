@@ -171,6 +171,11 @@ class SalesOrder extends Model
         return $this->hasMany(SalesOrderStatusLog::class)->orderBy('changed_at', 'desc');
     }
 
+    public function workOrders()
+    {
+        return $this->hasMany(\App\Models\Production\WorkOrder::class);
+    }
+
     /**
      * Bisa dibatalkan?
      */

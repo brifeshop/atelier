@@ -75,6 +75,11 @@ class Material extends Model
         return $this->hasMany(\App\Models\Purchasing\SupplierPrice::class);
     }
 
+    public function workOrderMaterials()
+    {
+        return $this->hasMany(\App\Models\Production\WorkOrderMaterial::class);
+    }
+
     /**
      * Scope: material di bawah stok minimum
      */
