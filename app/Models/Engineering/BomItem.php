@@ -18,6 +18,14 @@ class BomItem extends Model
         'item_id',
         'qty',
         'unit',
+        'spesifikasi',          // ← TAMBAH
+        'divisi',               // ← TAMBAH
+        'level',                // ← TAMBAH
+        'panjang_pakai',        // ← TAMBAH
+        'lebar_pakai',          // ← TAMBAH
+        'tinggi_pakai',         // ← TAMBAH
+        'berat_pakai',          // ← TAMBAH
+        'volume_pakai',         // ← TAMBAH
         'scrap_percent',
         'unit_cost',
         'total_cost',
@@ -29,6 +37,11 @@ class BomItem extends Model
         'scrap_percent'   => 'decimal:2',
         'unit_cost'       => 'decimal:2',
         'total_cost'      => 'decimal:2',
+        'panjang_pakai'   => 'decimal:4',       // ← TAMBAH
+        'lebar_pakai'     => 'decimal:4',       // ← TAMBAH
+        'tinggi_pakai'    => 'decimal:4',       // ← TAMBAH
+        'berat_pakai'     => 'decimal:4',       // ← TAMBAH
+        'volume_pakai'    => 'decimal:4',       // ← TAMBAH
     ];
 
     // ============ RELASI ============
@@ -70,6 +83,41 @@ class BomItem extends Model
             'product'  => 'bg-gold-500/10 border-gold-500/30 text-gold-400',
             default    => 'bg-navy-500/10 border-navy-500/30 text-navy-400',
         };
+    }
+
+    /**
+     * Deskripsi dimensi pakai
+     */
+    public function getDimensionLabelAttribute(): string
+    {
+        $parts = [];
+
+        if ($this->panjang_pakai) $parts[] = $this->panjang_pakai;
+        if ($this->lebar_pakai) $parts[] = $this->lebar_pakai;
+        if ($this->tinggi_pakai) $parts[] = $this->tinggi_pakai;
+
+        if (count($parts) > 0) {
+            return implode(' × ', $parts) . ' mm';
+        }
+
+        if ($this->berat_pakai) {
+            return $this->berat_pakai . ' gram';
+        }
+
+        if ($this->volume_pakai) {
+            return $this->volume_pakai . ' ml';
+        }
+
+        return '-';
+    }
+
+    /**
+     * Cek apakah item punya dimensi
+     */
+    public function getHasDimensionAttribute(): bool
+    {
+        return $this->panjang_pakai || $this->lebar_pakai || $this->tinggi_pakai
+            || $this->berat_pakai || $this->volume_pakai;
     }
 
     // ============ HELPER ============
