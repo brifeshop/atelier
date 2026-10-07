@@ -115,6 +115,11 @@ class StockMovementService
             throw new \Exception('Qty adjustment tidak boleh 0.');
         }
 
+        // Validasi alasan wajib untuk adjustment
+        if (empty($options['adjustment_reason'])) {
+            throw new \Exception('Alasan adjustment wajib diisi.');
+        }
+
         return self::recordMovement($itemType, $itemId, $locationId, 'adjustment', $qty, $options);
     }
 
@@ -162,6 +167,8 @@ class StockMovementService
                 'reference_type' => $options['reference_type'] ?? null,
                 'reference_id' => $options['reference_id'] ?? null,
                 'reference_number' => $options['reference_number'] ?? null,
+                'adjustment_reason' => $options['adjustment_reason'] ?? null,
+                'stock_opname_id' => $options['stock_opname_id'] ?? null,
                 'date' => $options['date'] ?? now()->toDateString(),
                 'notes' => $options['notes'] ?? null,
                 'created_by' => auth()->id(),

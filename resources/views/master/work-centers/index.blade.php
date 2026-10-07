@@ -44,8 +44,10 @@
                                 <th class="px-5 py-3 text-left text-[10px] font-mono font-semibold text-navy-400 uppercase tracking-widest">Kode</th>
                                 <th class="px-5 py-3 text-left text-[10px] font-mono font-semibold text-navy-400 uppercase tracking-widest">Nama</th>
                                 <th class="px-5 py-3 text-left text-[10px] font-mono font-semibold text-navy-400 uppercase tracking-widest">Lokasi</th>
-                                <th class="px-5 py-3 text-right text-[10px] font-mono font-semibold text-navy-400 uppercase tracking-widest">Tarif/Jam</th>
-                                <th class="px-5 py-3 text-right text-[10px] font-mono font-semibold text-navy-400 uppercase tracking-widest">Kapasitas/Jam</th>
+                                <th class="px-5 py-3 text-right text-[10px] font-mono font-semibold text-navy-400 uppercase tracking-widest">Labor/Jam</th>
+                                <th class="px-5 py-3 text-right text-[10px] font-mono font-semibold text-navy-400 uppercase tracking-widest">Overhead/Jam</th>
+                                <th class="px-5 py-3 text-right text-[10px] font-mono font-semibold text-navy-400 uppercase tracking-widest">Total/Jam</th>
+                                <th class="px-5 py-3 text-right text-[10px] font-mono font-semibold text-navy-400 uppercase tracking-widest">Kapasitas</th>
                                 <th class="px-5 py-3 text-left text-[10px] font-mono font-semibold text-navy-400 uppercase tracking-widest">Status</th>
                                 <th class="px-5 py-3 text-right text-[10px] font-mono font-semibold text-navy-400 uppercase tracking-widest">Aksi</th>
                             </tr>
@@ -56,8 +58,14 @@
                                     <td class="px-5 py-3 text-sm font-mono text-gold-500">{{ $wc->kode }}</td>
                                     <td class="px-5 py-3 text-sm text-white font-medium">{{ $wc->nama }}</td>
                                     <td class="px-5 py-3 text-sm text-navy-300">{{ $wc->location ?? '-' }}</td>
-                                    <td class="px-5 py-3 text-sm text-right font-mono text-white">
+                                    <td class="px-5 py-3 text-sm text-right font-mono text-gold-500">
                                         {{ format_rupiah($wc->hourly_rate) }}
+                                    </td>
+                                    <td class="px-5 py-3 text-sm text-right font-mono text-orange-400">
+                                        {{ format_rupiah($wc->overhead_rate ?? 0) }}
+                                    </td>
+                                    <td class="px-5 py-3 text-sm text-right font-mono text-white font-semibold">
+                                        {{ format_rupiah(($wc->hourly_rate ?? 0) + ($wc->overhead_rate ?? 0)) }}
                                     </td>
                                     <td class="px-5 py-3 text-sm text-right font-mono text-navy-300">
                                         {{ $wc->capacity_per_hour ? format_angka($wc->capacity_per_hour, 1) : '-' }}

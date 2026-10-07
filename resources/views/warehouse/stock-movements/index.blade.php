@@ -108,6 +108,12 @@
                                         <span class="inline-flex items-center text-xs px-2 py-0.5 rounded-full border {{ $mov->type_color }}">
                                             {{ $mov->type_label }}
                                         </span>
+                                        @if($mov->type === 'adjustment' && $mov->adjustment_reason)
+                                            <br>
+                                            <span class="inline-flex items-center text-[10px] mt-1 text-gold-500">
+                                                {{ $mov->adjustment_reason_label }}
+                                            </span>
+                                        @endif
                                     </td>
                                     <td class="px-5 py-3 text-right font-mono text-sm {{ $mov->qty > 0 ? 'text-green-400' : 'text-red-400' }}">
                                         {{ $mov->qty > 0 ? '+' : '' }}{{ format_angka($mov->qty, 2) }}

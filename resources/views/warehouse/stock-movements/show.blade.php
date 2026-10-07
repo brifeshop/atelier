@@ -23,6 +23,21 @@
                         {{ $item->type_label }}
                     </span>
                 </div>
+                @if($item->type === 'adjustment' && $item->adjustment_reason)
+                    <div>
+                        <p class="text-[10px] font-mono text-navy-500 uppercase tracking-widest mb-1">Alasan</p>
+                        <p class="text-sm text-navy-300">{{ $item->adjustment_reason_label }}</p>
+                    </div>
+                @endif
+
+                @if($item->stock_opname_id)
+                    <div>
+                        <p class="text-[10px] font-mono text-navy-500 uppercase tracking-widest mb-1">Referensi Opname</p>
+                        <a href="{{ route('warehouse.stock-opnames.show', $item->stock_opname_id) }}" class="text-sm text-gold-500 hover:text-gold-400">
+                            {{ $item->stockOpname->opname_number ?? '-' }}
+                        </a>
+                    </div>
+                @endif
                 <div>
                     <p class="text-[10px] font-mono text-navy-500 uppercase tracking-widest mb-1">Tanggal</p>
                     <p class="text-sm text-navy-300">{{ format_tanggal($item->date) }}</p>

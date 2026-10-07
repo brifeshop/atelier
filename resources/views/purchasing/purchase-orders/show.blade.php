@@ -135,6 +135,7 @@
                             <th class="px-5 py-3 text-left text-[10px] font-mono font-semibold text-navy-400 uppercase tracking-widest">Material</th>
                             <th class="px-5 py-3 text-right text-[10px] font-mono font-semibold text-navy-400 uppercase tracking-widest">Qty Pesan</th>
                             <th class="px-5 py-3 text-right text-[10px] font-mono font-semibold text-navy-400 uppercase tracking-widest">Qty Diterima</th>
+                            <th class="px-5 py-3 text-right text-[10px] font-mono font-semibold text-navy-400 uppercase tracking-widest">Reject</th>
                             <th class="px-5 py-3 text-right text-[10px] font-mono font-semibold text-navy-400 uppercase tracking-widest">Harga</th>
                             <th class="px-5 py-3 text-right text-[10px] font-mono font-semibold text-navy-400 uppercase tracking-widest">Diskon</th>
                             <th class="px-5 py-3 text-right text-[10px] font-mono font-semibold text-navy-400 uppercase tracking-widest">Subtotal</th>
@@ -157,6 +158,12 @@
                                     {{ format_angka($poItem->received_qty, 2) }}
                                     @if(!$poItem->is_fully_received)
                                         <br><span class="text-xs text-navy-500">Sisa: {{ format_angka($poItem->remaining_qty, 2) }}</span>
+                                    @endif
+                                </td>
+                                <td class="px-5 py-3 text-sm text-right font-mono {{ $poItem->total_rejected > 0 ? 'text-red-400 font-semibold' : 'text-navy-500' }}">
+                                    {{ $poItem->total_rejected > 0 ? format_angka($poItem->total_rejected, 2) : '-' }}
+                                    @if($poItem->total_rejected > 0)
+                                        <br><span class="text-[10px] text-red-400">⚠ REJECT</span>
                                     @endif
                                 </td>
                                 <td class="px-5 py-3 text-sm text-right font-mono text-navy-300">

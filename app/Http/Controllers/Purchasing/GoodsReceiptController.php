@@ -240,7 +240,22 @@ class GoodsReceiptController extends Controller
                 'status' => 'received',
                 'received_at' => now(),
             ]);
+            // Kirim notifikasi ke Purchasing kalau ada reject
+            $rejects = $goodsReceipt->items->filter(fn($i) => $i->qty_rejected > 0);
 
+            if ($rejects->count() > 0) {
+                $purchasingUsers = \App\Models\User::role('Purchasing')->get();
+                
+                foreach ($purchasingUsers as $user) {
+                    $user->notify(new \App\Notifications\GoodsRejectNotification(
+                        $goodsReceipt,
+                        $rejects->map(fn($i) => [
+                            'material' => $i->material->nama ?? '-',
+                            'qty_rejected' => (float) $i->qty_rejected,
+                        ])->toArray()
+                    ));
+                }
+            }
             // 4. Update status PO
             $po = $goodsReceipt->purchaseOrder;
             if ($po) {

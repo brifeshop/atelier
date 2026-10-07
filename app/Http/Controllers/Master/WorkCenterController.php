@@ -16,21 +16,23 @@ class WorkCenterController extends BaseCrudController
     protected array $searchable = ['kode', 'nama', 'location'];
 
     protected array $validationRules = [
-        'kode' => 'required|string|max:50|unique:work_centers,kode',
-        'nama' => 'required|string|max:255',
-        'description' => 'nullable|string',
-        'hourly_rate' => 'nullable|numeric|min:0',
-        'capacity_per_hour' => 'nullable|numeric|min:0',
-        'location' => 'nullable|string|max:100',
-        'notes' => 'nullable|string',
-        'is_active' => 'boolean',
+        'kode'                => 'required|string|max:50|unique:work_centers,kode',
+        'nama'                => 'required|string|max:255',
+        'description'         => 'nullable|string',
+        'hourly_rate'         => 'required|numeric|min:0',
+        'overhead_rate'       => 'nullable|numeric|min:0',        // ← TAMBAH
+        'capacity_per_hour'   => 'nullable|numeric|min:0',
+        'setup_time_default'  => 'nullable|numeric|min:0',        // ← TAMBAH
+        'location'            => 'nullable|string|max:100',
+        'notes'               => 'nullable|string',
+        'is_active'           => 'boolean',
     ];
 
     public function create()
     {
         return view("{$this->viewPrefix}.create", [
-            'title' => $this->title,
-            'routePrefix' => $this->routePrefix,
+            'title'         => $this->title,
+            'routePrefix'   => $this->routePrefix,
             'generatedKode' => WorkCenter::generateKode(),
         ]);
     }
@@ -43,7 +45,10 @@ class WorkCenterController extends BaseCrudController
             $validated['kode'] = WorkCenter::generateKode();
         }
 
-        $validated['is_active'] = $request->boolean('is_active', true);
+        // Default untuk field numeric nullable
+        $validated['overhead_rate']      = $validated['overhead_rate'] ?? 0;        // ← TAMBAH
+        $validated['setup_time_default'] = $validated['setup_time_default'] ?? 0;   // ← TAMBAH
+        $validated['is_active']          = $request->boolean('is_active', true);
 
         WorkCenter::create($validated);
 
@@ -61,7 +66,10 @@ class WorkCenterController extends BaseCrudController
 
         $validated = $request->validate($rules);
 
-        $validated['is_active'] = $request->boolean('is_active', true);
+        // Default untuk field numeric nullable
+        $validated['overhead_rate']      = $validated['overhead_rate'] ?? 0;        // ← TAMBAH
+        $validated['setup_time_default'] = $validated['setup_time_default'] ?? 0;   // ← TAMBAH
+        $validated['is_active']          = $request->boolean('is_active', true);
 
         $workCenter->update($validated);
 

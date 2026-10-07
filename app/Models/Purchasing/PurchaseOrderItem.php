@@ -81,4 +81,17 @@ class PurchaseOrderItem extends Model
     {
         return $this->received_qty >= $this->qty;
     }
+
+    public function goodsReceiptItems()
+    {
+        return $this->hasMany(GoodsReceiptItem::class);
+    }
+
+    /**
+     * Total qty rejected dari semua GR
+     */
+    public function getTotalRejectedAttribute(): float
+    {
+        return $this->goodsReceiptItems->sum('qty_rejected');
+    }
 }

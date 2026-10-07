@@ -70,6 +70,11 @@ class Material extends Model
         return asset('storage/' . $this->photo_path);
     }
 
+    public function supplierPrices()
+    {
+        return $this->hasMany(\App\Models\Purchasing\SupplierPrice::class);
+    }
+
     /**
      * Scope: material di bawah stok minimum
      */

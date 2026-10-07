@@ -1,0 +1,3386 @@
+﻿=== CONTEXT DUMP UNTUK M4C ===
+Generated: 2026-10-06 15:56:51
+
+
+########## KOMPONEN ATELIER ##########
+
+
+
+=== FILE: resources\views\components\atelier\button.blade.php ===
+
+@props([
+    'variant' => 'primary',
+    'size' => 'md',
+    'type' => 'button',
+    'icon' => null,
+    'href' => null,
+])
+
+@php
+    $variants = [
+        'primary' => 'bg-gold-500 text-navy-900 hover:bg-gold-400 shadow-lg shadow-gold-500/20',
+        'secondary' => 'bg-navy-800 text-white hover:bg-navy-700 border border-navy-700',
+        'ghost' => 'text-navy-300 hover:text-white hover:bg-navy-800',
+        'danger' => 'bg-red-500 text-white hover:bg-red-600',
+        'success' => 'bg-green-500 text-white hover:bg-green-600',
+    ];
+    
+    $sizes = [
+        'sm' => 'px-3 py-1.5 text-xs',
+        'md' => 'px-4 py-2 text-sm',
+        'lg' => 'px-6 py-3 text-base',
+    ];
+    
+    $classes = 'inline-flex items-center justify-center gap-2 font-semibold rounded-lg transition-all duration-200 ' 
+        . $variants[$variant] . ' ' . $sizes[$size];
+@endphp
+
+@if($href)
+    <a href="{{ $href }}" {{ $attributes->merge(['class' => $classes]) }}>
+        @if($icon)
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $icon }}"/>
+            </svg>
+        @endif
+        {{ $slot }}
+    </a>
+@else
+    <button type="{{ $type }}" {{ $attributes->merge(['class' => $classes]) }}>
+        @if($icon)
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $icon }}"/>
+            </svg>
+        @endif
+        {{ $slot }}
+    </button>
+@endif
+
+
+=== FILE: resources\views\components\atelier\card.blade.php ===
+
+@props([
+    'title' => null,
+    'subtitle' => null,
+    'padding' => 'p-6',
+    'brackets' => true,
+])
+
+<div {{ $attributes->merge(['class' => 'bg-navy-900/50 border border-navy-800 rounded-xl overflow-hidden relative']) }}>
+    
+    @if($brackets)
+        <div class="corner-bracket corner-bracket-tl"></div>
+        <div class="corner-bracket corner-bracket-tr"></div>
+        <div class="corner-bracket corner-bracket-bl"></div>
+        <div class="corner-bracket corner-bracket-br"></div>
+    @endif
+
+    @if($title)
+        <div class="px-5 py-4 border-b border-navy-800">
+            <div class="flex items-center gap-3">
+                <div class="w-1.5 h-1.5 rounded-full bg-gold-500" style="box-shadow: 0 0 8px #C9A961;"></div>
+                <div>
+                    <h3 class="font-serif text-lg font-bold text-white">{{ $title }}</h3>
+                    @if($subtitle)
+                        <p class="text-xs text-navy-400 mt-0.5">{{ $subtitle }}</p>
+                    @endif
+                </div>
+            </div>
+        </div>
+    @endif
+
+    <div class="{{ $padding }}">
+        {{ $slot }}
+    </div>
+</div>
+
+
+=== FILE: resources\views\components\atelier\empty-state.blade.php ===
+
+@props([
+    'title' => 'Belum ada data',
+    'subtitle' => 'Mulai dengan menambahkan data pertama.',
+    'icon' => 'M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4',
+    'action' => null,
+    'actionUrl' => null,
+])
+
+<div class="p-12 text-center">
+    <div class="w-20 h-20 mx-auto mb-6 rounded-full bg-navy-800/50 flex items-center justify-center border border-navy-700">
+        <svg class="w-10 h-10 text-navy-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="{{ $icon }}"/>
+        </svg>
+    </div>
+    <p class="font-serif text-lg text-white mb-2">{{ $title }}</p>
+    <p class="text-sm text-navy-400 mb-6">{{ $subtitle }}</p>
+
+    @if($action && $actionUrl)
+        <a href="{{ $actionUrl }}" 
+           class="inline-flex items-center gap-2 px-4 py-2 bg-gold-500 text-navy-900 text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-gold-400 transition">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
+            </svg>
+            {{ $action }}
+        </a>
+    @endif
+</div>
+
+
+=== FILE: resources\views\components\atelier\input.blade.php ===
+
+@props([
+    'name',
+    'label' => null,
+    'type' => 'text',
+    'value' => null,
+    'placeholder' => null,
+    'required' => false,
+    'hint' => null,
+])
+
+<div>
+    @if($label)
+        <label for="{{ $name }}" class="block text-xs font-semibold text-navy-300 uppercase tracking-wider mb-2">
+            {{ $label }}
+            @if($required) <span class="text-red-400">*</span> @endif
+        </label>
+    @endif
+
+    <input 
+        type="{{ $type }}"
+        name="{{ $name }}"
+        id="{{ $name }}"
+        value="{{ old($name, $value) }}"
+        placeholder="{{ $placeholder }}"
+        @if($required) required @endif
+        {{ $attributes->merge(['class' => 'w-full px-3 py-2.5 bg-navy-950 border border-navy-700 rounded-lg text-sm text-white placeholder-navy-500 focus:border-gold-500 focus:ring-2 focus:ring-gold-500/20 focus:outline-none transition']) }}
+    >
+
+    @if($hint)
+        <p class="text-xs text-navy-500 mt-1.5">{{ $hint }}</p>
+    @endif
+
+    @error($name)
+        <p class="text-xs text-red-400 mt-1.5">{{ $message }}</p>
+    @enderror
+</div>
+
+
+=== FILE: resources\views\components\atelier\page-header.blade.php ===
+
+@props([
+    'title' => 'Page Title',
+    'subtitle' => null,
+    'segment' => null,
+    'action' => null,
+    'actionUrl' => null,
+])
+
+<div class="mb-8">
+    <!-- Laser Line -->
+    <div class="laser-line laser-line-pulse mb-4">
+        <div class="laser-dot laser-dot-left"></div>
+        <div class="laser-dot laser-dot-right"></div>
+    </div>
+
+    <!-- Header Content -->
+    <div class="flex items-end justify-between">
+        <div class="flex items-baseline gap-4">
+            @if($segment)
+                <span class="font-mono text-xs text-gold-500 tracking-widest glow-gold">{{ $segment }}</span>
+            @endif
+            <div>
+                <h1 class="font-serif text-2xl font-bold text-white leading-none">{{ $title }}</h1>
+                @if($subtitle)
+                    <p class="text-xs text-navy-400 mt-1.5 tracking-wide uppercase">{{ $subtitle }}</p>
+                @endif
+            </div>
+        </div>
+
+        @if($action && $actionUrl)
+            <a href="{{ $actionUrl }}" 
+               class="inline-flex items-center gap-2 px-4 py-2 bg-gold-500 text-navy-900 text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-gold-400 transition">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
+                </svg>
+                {{ $action }}
+            </a>
+        @endif
+    </div>
+</div>
+
+
+=== FILE: resources\views\components\atelier\searchable-select.blade.php ===
+
+@props([
+    'name',
+    'options' => [],
+    'value' => null,
+    'placeholder' => '-- Pilih --',
+    'searchPlaceholder' => 'Cari...',
+    'required' => false,
+    'label' => null,
+])
+
+@php
+    // Format options: ['id' => 'Label', 'data-*' => 'value']
+    $formattedOptions = [];
+    foreach ($options as $key => $opt) {
+        if (is_array($opt)) {
+            $formattedOptions[] = [
+                'value' => (string) $key,
+                'label' => $opt['label'] ?? $key,
+                'data' => $opt['data'] ?? [],
+            ];
+        } else {
+            $formattedOptions[] = [
+                'value' => (string) $key,
+                'label' => $opt,
+                'data' => [],
+            ];
+        }
+    }
+@endphp
+
+<div x-data="searchableSelect({
+    options: {{ Js::from($formattedOptions) }},
+    modelValue: '{{ old($name, $value) }}',
+    name: '{{ $name }}'
+})" x-init="init()" class="relative">
+
+    @if($label)
+        <label class="block text-xs font-semibold text-navy-300 uppercase tracking-wider mb-2">
+            {{ $label }}
+            @if($required) <span class="text-red-400">*</span> @endif
+        </label>
+    @endif
+
+    {{-- Hidden input untuk form submit --}}
+    <input type="hidden" :name="name" :value="selected">
+
+    {{-- Display --}}
+    <div @click="toggle()" @keydown.escape="close()"
+         class="w-full px-3 py-2.5 bg-navy-950 border border-navy-700 rounded-lg text-sm text-white cursor-pointer focus-within:border-gold-500 focus-within:ring-2 focus-within:ring-gold-500/20 transition flex items-center justify-between"
+         :class="open && 'border-gold-500 ring-2 ring-gold-500/20'">
+
+        <span x-show="selected" x-text="selectedLabel" class="truncate"></span>
+        <span x-show="!selected" class="text-navy-500">{{ $placeholder }}</span>
+
+        <svg class="w-4 h-4 text-navy-500 transition-transform" :class="open && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+        </svg>
+    </div>
+
+    {{-- Dropdown --}}
+    <div x-show="open" x-cloak
+         x-transition:enter="transition ease-out duration-100"
+         x-transition:enter-start="opacity-0 -translate-y-1"
+         x-transition:enter-end="opacity-100 translate-y-0"
+         class="absolute z-50 mt-1 w-full bg-navy-800 border border-navy-700 rounded-lg shadow-xl overflow-hidden">
+
+        {{-- Search Input --}}
+        <div class="p-2 border-b border-navy-700">
+            <input type="text" x-model="search" x-ref="searchInput"
+                   @keydown.arrow-down.prevent="highlightNext()"
+                   @keydown.arrow-up.prevent="highlightPrev()"
+                   @keydown.enter.prevent="selectHighlighted()"
+                   @keydown.escape="close()"
+                   placeholder="{{ $searchPlaceholder }}"
+                   class="w-full px-3 py-2 bg-navy-950 border border-navy-700 rounded text-sm text-white placeholder-navy-500 focus:border-gold-500 focus:ring-0 focus:outline-none">
+        </div>
+
+        {{-- Options --}}
+        <div class="max-h-64 overflow-y-auto">
+            <template x-if="filteredOptions.length === 0">
+                <div class="px-3 py-4 text-center text-sm text-navy-500">
+                    Tidak ada hasil
+                </div>
+            </template>
+
+            <template x-for="(opt, index) in filteredOptions" :key="opt.value">
+                <div @click="select(opt)"
+                     @mouseenter="highlighted = index"
+                     class="px-3 py-2 text-sm cursor-pointer transition flex items-center justify-between"
+                     :class="{
+                         'bg-gold-500 text-navy-900': highlighted === index,
+                         'text-white hover:bg-navy-700': highlighted !== index && selected === opt.value,
+                         'text-navy-300 hover:bg-navy-700': highlighted !== index && selected !== opt.value,
+                     }">
+                    <span x-text="opt.label"></span>
+                    <svg x-show="selected === opt.value" class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                    </svg>
+                </div>
+            </template>
+        </div>
+    </div>
+
+    {{-- Click outside handler --}}
+    <div x-show="open" @click="close()" class="fixed inset-0 z-40"></div>
+</div>
+
+@push('scripts')
+<script>
+    function searchableSelect({ options, modelValue, name }) {
+        return {
+            options: options,
+            selected: modelValue || '',
+            search: '',
+            open: false,
+            highlighted: 0,
+            name: name,
+
+            init() {
+                // Watch selected, dispatch event agar parent bisa dengar
+                this.$watch('selected', (value) => {
+                    this.$dispatch('select-changed', { value, name: this.name });
+                });
+            },
+
+            get selectedLabel() {
+                const opt = this.options.find(o => o.value === this.selected);
+                return opt ? opt.label : '';
+            },
+
+            get filteredOptions() {
+                if (!this.search) return this.options;
+                const q = this.search.toLowerCase();
+                return this.options.filter(o => o.label.toLowerCase().includes(q));
+            },
+
+            toggle() {
+                this.open = !this.open;
+                if (this.open) {
+                    this.search = '';
+                    this.highlighted = 0;
+                    this.$nextTick(() => this.$refs.searchInput.focus());
+                }
+            },
+
+            close() {
+                this.open = false;
+                this.search = '';
+            },
+
+            select(opt) {
+                this.selected = opt.value;
+                this.close();
+            },
+
+            highlightNext() {
+                if (this.highlighted < this.filteredOptions.length - 1) {
+                    this.highlighted++;
+                }
+            },
+
+            highlightPrev() {
+                if (this.highlighted > 0) {
+                    this.highlighted--;
+                }
+            },
+
+            selectHighlighted() {
+                if (this.filteredOptions[this.highlighted]) {
+                    this.select(this.filteredOptions[this.highlighted]);
+                }
+            },
+        };
+    }
+</script>
+@endpush
+
+
+=== FILE: resources\views\components\atelier\select.blade.php ===
+
+@props([
+    'name',
+    'label' => null,
+    'options' => [],
+    'value' => null,
+    'placeholder' => '-- Pilih --',
+    'required' => false,
+])
+
+<div>
+    @if($label)
+        <label for="{{ $name }}" class="block text-xs font-semibold text-navy-300 uppercase tracking-wider mb-2">
+            {{ $label }}
+            @if($required) <span class="text-red-400">*</span> @endif
+        </label>
+    @endif
+
+    <select 
+        name="{{ $name }}"
+        id="{{ $name }}"
+        @if($required) required @endif
+        {{ $attributes->merge(['class' => 'w-full px-3 py-2.5 bg-navy-950 border border-navy-700 rounded-lg text-sm text-white focus:border-gold-500 focus:ring-2 focus:ring-gold-500/20 focus:outline-none transition']) }}
+    >
+        @if($placeholder)
+            <option value="">{{ $placeholder }}</option>
+        @endif
+        @foreach($options as $key => $label)
+            <option value="{{ $key }}" @selected(old($name, $value) == $key)>{{ $label }}</option>
+        @endforeach
+    </select>
+
+    @error($name)
+        <p class="text-xs text-red-400 mt-1.5">{{ $message }}</p>
+    @enderror
+</div>
+
+
+=== FILE: resources\views\components\atelier\stat-card.blade.php ===
+
+@props([
+    'label',
+    'value',
+    'desc' => null,
+    'trend' => null,
+    'trendType' => 'neutral', // up, down, neutral
+    'accent' => false,
+    'icon' => null,
+    'href' => null,
+])
+
+@php
+    $trendColors = [
+        'up' => 'text-green-400 bg-green-500/10',
+        'down' => 'text-red-400 bg-red-500/10',
+        'neutral' => 'text-navy-400 bg-navy-500/10',
+    ];
+@endphp
+
+<a href="{{ $href ?? '#' }}" 
+   class="group relative {{ $accent ? 'bg-gradient-to-br from-gold-500/10 to-navy-900/50 border-gold-500/30 hover:border-gold-500' : 'bg-navy-900/50 border-navy-800 hover:border-gold-500/50' }} border rounded-xl p-5 transition-all duration-300 overflow-hidden block">
+    
+    <div class="flex items-start justify-between mb-3">
+        @if($icon)
+            <div class="w-9 h-9 rounded-lg {{ $accent ? 'bg-gold-500/20' : 'bg-navy-800 group-hover:bg-gold-500/20' }} flex items-center justify-center transition">
+                <svg class="w-4 h-4 text-gold-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $icon }}"/>
+                </svg>
+            </div>
+        @else
+            <div></div>
+        @endif
+
+        @if($trend)
+            <span class="text-[10px] font-semibold {{ $trendColors[$trendType] }} px-2 py-0.5 rounded-full font-mono">
+                {{ $trend }}
+            </span>
+        @endif
+    </div>
+
+    <p class="font-serif {{ $accent ? 'text-2xl' : 'text-3xl' }} font-bold text-white leading-none">{{ $value }}</p>
+    <p class="text-xs {{ $accent ? 'text-gold-500/70' : 'text-navy-400' }} uppercase tracking-wider mt-2">{{ $label }}</p>
+    
+    @if($desc)
+        <p class="text-xs text-navy-500 mt-2">{{ $desc }}</p>
+    @endif
+</a>
+
+
+########## MODELS ##########
+
+
+
+=== FILE: app\Models\Warehouse\Inventory.php ===
+
+<?php
+
+namespace App\Models\Warehouse;
+
+use App\Models\Master\Material;
+use App\Models\Master\Product;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class Inventory extends Model
+{
+    use HasFactory;
+
+    protected $table = 'inventories';
+
+    protected $fillable = [
+        'item_type',
+        'item_id',
+        'location_id',
+        'qty',
+        'min_stock',
+        'max_stock',
+        'last_movement_at',
+    ];
+
+    protected $casts = [
+        'qty' => 'decimal:2',
+        'min_stock' => 'decimal:2',
+        'max_stock' => 'decimal:2',
+        'last_movement_at' => 'datetime',
+    ];
+
+    /**
+     * Relasi ke Location
+     */
+    public function location()
+    {
+        return $this->belongsTo(Location::class);
+    }
+
+    /**
+     * Relasi polymorphic ke item (Material / Product)
+     */
+    public function item()
+    {
+        return $this->morphTo('item', 'item_type', 'item_id');
+    }
+
+    /**
+     * Scope: filter by type
+     */
+    public function scopeMaterials($query)
+    {
+        return $query->where('item_type', 'material');
+    }
+
+    public function scopeProducts($query)
+    {
+        return $query->where('item_type', 'product');
+    }
+
+    /**
+     * Scope: stok di bawah minimum
+     */
+    public function scopeLowStock($query)
+    {
+        return $query->whereNotNull('min_stock')
+                     ->whereColumn('qty', '<=', 'min_stock');
+    }
+
+    /**
+     * Cek apakah stok rendah
+     */
+    public function getIsLowStockAttribute(): bool
+    {
+        return $this->min_stock !== null && $this->qty <= $this->min_stock;
+    }
+
+    /**
+     * Get atau buat inventory record.
+     */
+    public static function getOrCreate(string $itemType, int $itemId, int $locationId): self
+    {
+        return self::firstOrCreate(
+            [
+                'item_type' => $itemType,
+                'item_id' => $itemId,
+                'location_id' => $locationId,
+            ],
+            [
+                'qty' => 0,
+            ]
+        );
+    }
+    /**
+ * Harga per unit (dari material atau product)
+ */
+public function getUnitPriceAttribute(): float
+{
+    if (!$this->item) return 0;
+
+    if ($this->item_type === 'material') {
+        return (float) ($this->item->price ?? 0);
+    }
+
+    if ($this->item_type === 'product') {
+        return (float) ($this->item->selling_price ?? 0);
+    }
+
+    return 0;
+}
+
+/**
+ * Total nilai = qty Ã— unit_price
+ */
+public function getTotalValueAttribute(): float
+{
+    return (float) $this->qty * $this->unit_price;
+}
+}
+
+
+=== FILE: app\Models\Warehouse\StockMovement.php ===
+
+<?php
+
+namespace App\Models\Warehouse;
+
+use App\Models\User;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class StockMovement extends Model
+{
+    use HasFactory;
+
+    protected $table = 'stock_movements';
+
+    protected $fillable = [
+        'movement_number',
+        'item_type',
+        'item_id',
+        'location_id',
+        'type',
+        'qty',
+        'qty_before',
+        'qty_after',
+        'unit_price',
+        'total_value',
+        'reference_type',
+        'reference_id',
+        'reference_number',
+        'date',
+        'notes',
+        'created_by',
+    ];
+
+    protected $casts = [
+        'qty' => 'decimal:2',
+        'qty_before' => 'decimal:2',
+        'qty_after' => 'decimal:2',
+        'unit_price' => 'decimal:2',
+        'total_value' => 'decimal:2',
+        'date' => 'date',
+    ];
+
+    public function location()
+    {
+        return $this->belongsTo(Location::class);
+    }
+
+    public function item()
+    {
+        return $this->morphTo('item', 'item_type', 'item_id');
+    }
+
+    public function createdBy()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    /**
+     * Generate nomor movement otomatis: SM-2025-0001
+     */
+    public static function generateNumber(): string
+    {
+        $year = date('Y');
+        $prefix = "SM-{$year}-";
+
+        $last = self::where('movement_number', 'like', "{$prefix}%")
+            ->orderBy('movement_number', 'desc')
+            ->first();
+
+        $lastNumber = $last ? (int) substr($last->movement_number, -4) : 0;
+        return $prefix . str_pad($lastNumber + 1, 4, '0', STR_PAD_LEFT);
+    }
+
+    /**
+     * Label type dengan warna
+     */
+    public function getTypeColorAttribute(): string
+    {
+        return match($this->type) {
+            'in' => 'bg-green-500/10 text-green-400 border-green-500/30',
+            'out' => 'bg-red-500/10 text-red-400 border-red-500/30',
+            'transfer' => 'bg-blue-500/10 text-blue-400 border-blue-500/30',
+            'adjustment' => 'bg-gold-500/10 text-gold-500 border-gold-500/30',
+            default => 'bg-navy-800 text-navy-300 border-navy-700',
+        };
+    }
+
+    public function getTypeLabelAttribute(): string
+    {
+        return match($this->type) {
+            'in' => 'Masuk',
+            'out' => 'Keluar',
+            'transfer' => 'Transfer',
+            'adjustment' => 'Penyesuaian',
+            default => ucfirst($this->type),
+        };
+    }
+}
+
+
+=== FILE: app\Models\Warehouse\Location.php ===
+
+<?php
+
+namespace App\Models\Warehouse;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class Location extends Model
+{
+    use HasFactory;
+
+    protected $table = 'locations';
+
+    protected $fillable = [
+        'warehouse_id',
+        'kode',
+        'nama',
+        'capacity',
+        'notes',
+        'is_active',
+    ];
+
+    protected $casts = [
+        'is_active' => 'boolean',
+        'capacity' => 'decimal:2',
+    ];
+
+    /**
+     * Relasi ke Warehouse
+     */
+    public function warehouse()
+    {
+        return $this->belongsTo(Warehouse::class);
+    }
+
+    /**
+     * Generate kode location otomatis: WH-0001-A-01
+     * Format: {warehouse_kode}-{huruf}-{angka}
+     */
+    public static function generateKode(int $warehouseId): string
+    {
+        $warehouse = Warehouse::find($warehouseId);
+        if (!$warehouse) {
+            return 'LOC-0001';
+        }
+
+        // Hitung lokasi ke berapa di warehouse ini
+        $count = self::where('warehouse_id', $warehouseId)->count();
+        $number = $count + 1;
+
+        // Format: WH-0001-A-01
+        // Huruf A untuk 1-10, B untuk 11-20, dst.
+        $letterIndex = (int) floor(($number - 1) / 10);
+        $letter = chr(65 + $letterIndex); // 65 = 'A'
+        $numberInGroup = (($number - 1) % 10) + 1;
+
+        return $warehouse->kode . '-' . $letter . '-' . str_pad($numberInGroup, 2, '0', STR_PAD_LEFT);
+    }
+
+    /**
+     * Scope: hanya location aktif
+     */
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
+    }
+}
+
+
+=== FILE: app\Models\Warehouse\Warehouse.php ===
+
+<?php
+
+namespace App\Models\Warehouse;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class Warehouse extends Model
+{
+    use HasFactory;
+
+    protected $table = 'warehouses';
+
+    protected $fillable = [
+        'kode',
+        'nama',
+        'type',
+        'address',
+        'pic_name',
+        'phone',
+        'notes',
+        'is_active',
+    ];
+
+    protected $casts = [
+        'is_active' => 'boolean',
+    ];
+
+    /**
+     * Relasi ke Location
+     */
+    public function locations()
+    {
+        return $this->hasMany(Location::class);
+    }
+
+    /**
+     * Generate kode warehouse otomatis: WH-0001
+     */
+    public static function generateKode(): string
+    {
+        $last = self::orderBy('id', 'desc')->first();
+        $lastNumber = $last ? (int) substr($last->kode, -4) : 0;
+        return 'WH-' . str_pad($lastNumber + 1, 4, '0', STR_PAD_LEFT);
+    }
+
+    /**
+     * Scope: hanya warehouse aktif
+     */
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
+    }
+
+    /**
+     * Label type dengan warna
+     */
+    public function getTypeColorAttribute(): string
+    {
+        return match($this->type) {
+            'Raw Material' => 'bg-blue-500/10 text-blue-400 border-blue-500/30',
+            'Finished Goods' => 'bg-green-500/10 text-green-400 border-green-500/30',
+            'WIP' => 'bg-gold-500/10 text-gold-500 border-gold-500/30',
+            default => 'bg-navy-800 text-navy-300 border-navy-700',
+        };
+    }
+}
+
+
+=== FILE: app\Models\Master\Material.php ===
+
+<?php
+
+namespace App\Models\Master;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class Material extends Model
+{
+    use HasFactory;
+
+    protected $table = 'materials';
+
+    protected $fillable = [
+        'kode',
+        'nama',
+        'category',
+        'unit',
+        'price',
+        'min_stock',
+        'max_stock',
+        'current_stock',
+        'supplier_id',
+        'location',
+        'notes',
+        'photo_path',
+        'is_active',
+    ];
+
+    protected $casts = [
+        'is_active' => 'boolean',
+        'price' => 'decimal:2',
+        'min_stock' => 'decimal:2',
+        'max_stock' => 'decimal:2',
+        'current_stock' => 'decimal:2',
+    ];
+
+    /**
+     * Relasi ke Supplier
+     */
+    public function supplier()
+    {
+        return $this->belongsTo(Supplier::class);
+    }
+
+    /**
+     * Generate kode material otomatis: MAT-0001
+     */
+    public static function generateKode(): string
+    {
+        $last = self::orderBy('id', 'desc')->first();
+        $lastNumber = $last ? (int) substr($last->kode, -4) : 0;
+        return 'MAT-' . str_pad($lastNumber + 1, 4, '0', STR_PAD_LEFT);
+    }
+
+    /**
+     * Scope: hanya material aktif
+     */
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
+    }
+
+    /**
+     * URL foto material
+     */
+    public function getPhotoUrlAttribute(): ?string
+    {
+        if (!$this->photo_path) return null;
+        return asset('storage/' . $this->photo_path);
+    }
+
+    public function supplierPrices()
+    {
+        return $this->hasMany(\App\Models\Purchasing\SupplierPrice::class);
+    }
+
+    /**
+     * Scope: material di bawah stok minimum
+     */
+    public function scopeLowStock($query)
+    {
+        return $query->whereColumn('current_stock', '<=', 'min_stock');
+    }
+}
+
+
+=== FILE: app\Models\Master\Product.php ===
+
+<?php
+
+namespace App\Models\Master;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class Product extends Model
+{
+    use HasFactory;
+
+    protected $table = 'products';
+
+    protected $fillable = [
+        'kode',
+        'nama',
+        'category',
+        'unit',
+        'description',
+        'selling_price',
+        'notes',
+        'photo_path',
+        'is_active',
+    ];
+
+    protected $casts = [
+        'is_active' => 'boolean',
+        'selling_price' => 'decimal:2',
+    ];
+
+    /**
+     * Generate kode product otomatis: PRD-0001
+     */
+    public static function generateKode(): string
+    {
+        $last = self::orderBy('id', 'desc')->first();
+        $lastNumber = $last ? (int) substr($last->kode, -4) : 0;
+        return 'PRD-' . str_pad($lastNumber + 1, 4, '0', STR_PAD_LEFT);
+    }
+
+    public function getPhotoUrlAttribute(): ?string
+    {
+        if (!$this->photo_path) return null;
+        return asset('storage/' . $this->photo_path);
+    }
+
+    /**
+     * Scope: hanya product aktif
+     */
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
+    }
+}
+
+
+########## CONTROLLERS ##########
+
+
+
+=== FILE: app\Http\Controllers\Warehouse\InventoryController.php ===
+
+<?php
+
+namespace App\Http\Controllers\Warehouse;
+
+use App\Http\Controllers\Controller;
+use App\Models\Warehouse\Inventory;
+use App\Models\Warehouse\Location;
+use App\Models\Warehouse\Warehouse;
+use App\Models\Master\Material;
+use App\Models\Master\Product;
+use Illuminate\Http\Request;
+
+class InventoryController extends Controller
+{
+    /**
+     * List semua inventory
+     */
+    public function index(Request $request)
+        {
+            $query = Inventory::with(['location.warehouse', 'item']);
+
+            // Filter by warehouse
+            if ($request->filled('warehouse_id')) {
+                $query->whereHas('location', function ($q) use ($request) {
+                    $q->where('warehouse_id', $request->warehouse_id);
+                });
+            }
+
+            // Filter by type
+            if ($request->filled('item_type')) {
+                $query->where('item_type', $request->item_type);
+            }
+
+            // Filter low stock
+            if ($request->filled('low_stock')) {
+                $query->lowStock();
+            }
+
+            // Search
+            if ($request->filled('search')) {
+                $search = $request->search;
+                $query->where(function ($q) use ($search) {
+                    $q->whereHas('item', function ($q2) use ($search) {
+                        $q2->where('nama', 'like', "%{$search}%")
+                        ->orWhere('kode', 'like', "%{$search}%");
+                    });
+                });
+            }
+
+            $items = $query->latest('last_movement_at')->paginate(15);
+
+            // Hitung total value dari SEMUA inventory (bukan cuma yang di halaman ini)
+            $totalValue = 0;
+            Inventory::with('item')->where('qty', '>', 0)->chunk(100, function ($inventories) use (&$totalValue) {
+                foreach ($inventories as $inv) {
+                    if (!$inv->item) continue;
+                    
+                    $price = 0;
+                    if ($inv->item_type === 'material') {
+                        $price = (float) ($inv->item->price ?? 0);
+                    } elseif ($inv->item_type === 'product') {
+                        $price = (float) ($inv->item->selling_price ?? 0);
+                    }
+                    
+                    $totalValue += (float) $inv->qty * $price;
+                }
+            });
+
+            // Stats
+            $stats = [
+                'total_items' => Inventory::where('qty', '>', 0)->count(),
+                'total_locations' => Location::active()->count(),
+                'low_stock_count' => Inventory::lowStock()->count(),
+                'total_value' => $totalValue,
+            ];
+
+            return view('warehouse.inventories.index', [
+                'items' => $items,
+                'stats' => $stats,
+                'warehouses' => Warehouse::active()->orderBy('nama')->get(),
+            ]);
+        }
+
+    /**
+     * Show detail inventory
+     */
+    public function show(Inventory $inventory)
+    {
+        $inventory->load(['location.warehouse', 'item']);
+        return view('warehouse.inventories.show', ['item' => $inventory]);
+    }
+
+    /**
+     * Update min/max stock
+     */
+    public function update(Request $request, Inventory $inventory)
+    {
+        $validated = $request->validate([
+            'min_stock' => 'nullable|numeric|min:0',
+            'max_stock' => 'nullable|numeric|min:0',
+        ]);
+
+        $inventory->update($validated);
+
+        return back()->with('success', 'Setting stok berhasil diperbarui.');
+    }
+}
+
+
+=== FILE: app\Http\Controllers\Warehouse\StockMovementController.php ===
+
+<?php
+
+namespace App\Http\Controllers\Warehouse;
+
+use App\Http\Controllers\Controller;
+use App\Models\Warehouse\StockMovement;
+use App\Models\Warehouse\Location;
+use App\Models\Warehouse\Warehouse;
+use App\Models\Master\Material;
+use App\Models\Master\Product;
+use App\Services\StockMovementService;
+use Illuminate\Http\Request;
+
+class StockMovementController extends Controller
+{
+    /**
+     * List semua movement
+     */
+    public function index(Request $request)
+    {
+        $query = StockMovement::with(['location.warehouse', 'item', 'createdBy']);
+
+        // Filter by type
+        if ($request->filled('type')) {
+            $query->where('type', $request->type);
+        }
+
+        // Filter by warehouse
+        if ($request->filled('warehouse_id')) {
+            $query->whereHas('location', function ($q) use ($request) {
+                $q->where('warehouse_id', $request->warehouse_id);
+            });
+        }
+
+        // Filter by date range
+        if ($request->filled('date_from')) {
+            $query->whereDate('date', '>=', $request->date_from);
+        }
+        if ($request->filled('date_to')) {
+            $query->whereDate('date', '<=', $request->date_to);
+        }
+
+        // Search
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('movement_number', 'like', "%{$search}%")
+                  ->orWhere('reference_number', 'like', "%{$search}%")
+                  ->orWhereHas('item', function ($q2) use ($search) {
+                      $q2->where('nama', 'like', "%{$search}%")
+                         ->orWhere('kode', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        $items = $query->latest('date')->latest('id')->paginate(20);
+
+        // Stats
+        $stats = [
+            'total_movements' => StockMovement::count(),
+            'in_count' => StockMovement::where('type', 'in')->count(),
+            'out_count' => StockMovement::where('type', 'out')->count(),
+            'adjustment_count' => StockMovement::where('type', 'adjustment')->count(),
+        ];
+
+        return view('warehouse.stock-movements.index', [
+            'items' => $items,
+            'stats' => $stats,
+            'warehouses' => Warehouse::active()->orderBy('nama')->get(),
+        ]);
+    }
+
+    /**
+     * Form create movement (manual)
+     */
+    public function create(Request $request)
+    {
+        $type = $request->input('type', 'in');
+
+        return view('warehouse.stock-movements.create', [
+            'type' => $type,
+            'warehouses' => Warehouse::active()->orderBy('nama')->get(),
+            'locations' => Location::active()->with('warehouse')->orderBy('kode')->get(),
+            'materials' => Material::active()->orderBy('nama')->get(),
+            'products' => Product::active()->orderBy('nama')->get(),
+            'generatedNumber' => StockMovement::generateNumber(),
+        ]);
+    }
+
+    /**
+     * Store movement
+     */
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'type' => 'required|in:in,out,adjustment',
+            'item_type' => 'required|in:material,product',
+            'item_id' => 'required|integer',
+            'location_id' => 'required|exists:locations,id',
+            'qty' => 'required|numeric|min:0.01',
+            'unit_price' => 'nullable|numeric|min:0',
+            'date' => 'required|date',
+            'notes' => 'nullable|string',
+        ]);
+
+        try {
+            $options = [
+                'unit_price' => $validated['unit_price'] ?? null,
+                'date' => $validated['date'],
+                'notes' => $validated['notes'] ?? null,
+                'reference_number' => 'Manual',
+            ];
+
+            if ($validated['type'] === 'in') {
+                StockMovementService::recordIn(
+                    $validated['item_type'],
+                    (int) $validated['item_id'],
+                    (int) $validated['location_id'],
+                    (float) $validated['qty'],
+                    $options
+                );
+            } elseif ($validated['type'] === 'out') {
+                StockMovementService::recordOut(
+                    $validated['item_type'],
+                    (int) $validated['item_id'],
+                    (int) $validated['location_id'],
+                    (float) $validated['qty'],
+                    $options
+                );
+            } elseif ($validated['type'] === 'adjustment') {
+                // Adjustment bisa positif atau negatif
+                StockMovementService::recordAdjustment(
+                    $validated['item_type'],
+                    (int) $validated['item_id'],
+                    (int) $validated['location_id'],
+                    (float) $validated['qty'],
+                    $options
+                );
+            }
+
+            return redirect()
+                ->route('warehouse.stock-movements.index')
+                ->with('success', 'Stock movement berhasil dicatat.');
+        } catch (\Exception $e) {
+            return back()->withInput()->with('error', $e->getMessage());
+        }
+    }
+
+    /**
+     * Show detail
+     */
+    public function show(StockMovement $stockMovement)
+    {
+        $stockMovement->load(['location.warehouse', 'item', 'createdBy']);
+        return view('warehouse.stock-movements.show', ['item' => $stockMovement]);
+    }
+
+    /**
+     * Form transfer
+     */
+    public function createTransfer()
+    {
+        return view('warehouse.stock-movements.transfer', [
+            'locations' => Location::active()->with('warehouse')->orderBy('kode')->get(),
+            'materials' => Material::active()->orderBy('nama')->get(),
+            'products' => Product::active()->orderBy('nama')->get(),
+        ]);
+    }
+
+    /**
+     * Store transfer
+     */
+    public function storeTransfer(Request $request)
+    {
+        $validated = $request->validate([
+            'item_type' => 'required|in:material,product',
+            'item_id' => 'required|integer',
+            'from_location_id' => 'required|exists:locations,id',
+            'to_location_id' => 'required|exists:locations,id|different:from_location_id',
+            'qty' => 'required|numeric|min:0.01',
+            'date' => 'required|date',
+            'notes' => 'nullable|string',
+        ], [
+            'to_location_id.different' => 'Lokasi tujuan harus berbeda dengan lokasi asal.',
+        ]);
+
+        try {
+            StockMovementService::recordTransfer(
+                $validated['item_type'],
+                (int) $validated['item_id'],
+                (int) $validated['from_location_id'],
+                (int) $validated['to_location_id'],
+                (float) $validated['qty'],
+                [
+                    'date' => $validated['date'],
+                    'notes' => $validated['notes'] ?? null,
+                ]
+            );
+
+            return redirect()
+                ->route('warehouse.stock-movements.index')
+                ->with('success', 'Transfer berhasil dicatat.');
+        } catch (\Exception $e) {
+            return back()->withInput()->with('error', $e->getMessage());
+        }
+    }
+}
+
+
+########## SERVICES ##########
+
+
+
+=== FILE: StockMovementService.php ===
+
+<?php
+
+namespace App\Services;
+
+use App\Models\Warehouse\Inventory;
+use App\Models\Warehouse\StockMovement;
+use Illuminate\Support\Facades\DB;
+
+class StockMovementService
+{
+    /**
+     * CATAT STOK MASUK (IN)
+     * 
+     * Contoh pemakaian:
+     * - Goods Receipt (M4B)
+     * - Produk jadi dari produksi (M6)
+     * - Stock opname surplus (M4C)
+     */
+    public static function recordIn(
+        string $itemType,
+        int $itemId,
+        int $locationId,
+        float $qty,
+        array $options = []
+    ): StockMovement {
+        if ($qty <= 0) {
+            throw new \Exception('Qty untuk IN harus lebih dari 0.');
+        }
+
+        return self::recordMovement($itemType, $itemId, $locationId, 'in', $qty, $options);
+    }
+
+    /**
+     * CATAT STOK KELUAR (OUT)
+     * 
+     * Contoh pemakaian:
+     * - Material Issue (M6)
+     * - Delivery Order (M9)
+     * - Stock opname minus (M4C)
+     */
+    public static function recordOut(
+        string $itemType,
+        int $itemId,
+        int $locationId,
+        float $qty,
+        array $options = []
+    ): StockMovement {
+        if ($qty <= 0) {
+            throw new \Exception('Qty untuk OUT harus lebih dari 0.');
+        }
+
+        // Validasi stok cukup
+        $inventory = Inventory::getOrCreate($itemType, $itemId, $locationId);
+        if ($inventory->qty < $qty) {
+            throw new \Exception("Stok tidak cukup. Tersedia: {$inventory->qty}, diminta: {$qty}.");
+        }
+
+        return self::recordMovement($itemType, $itemId, $locationId, 'out', -$qty, $options);
+    }
+
+    /**
+     * CATAT TRANSFER antar lokasi
+     */
+    public static function recordTransfer(
+        string $itemType,
+        int $itemId,
+        int $fromLocationId,
+        int $toLocationId,
+        float $qty,
+        array $options = []
+    ): array {
+        if ($qty <= 0) {
+            throw new \Exception('Qty untuk transfer harus lebih dari 0.');
+        }
+
+        if ($fromLocationId === $toLocationId) {
+            throw new \Exception('Lokasi asal dan tujuan tidak boleh sama.');
+        }
+
+        DB::beginTransaction();
+        try {
+            // OUT dari lokasi asal
+            $out = self::recordOut($itemType, $itemId, $fromLocationId, $qty, array_merge($options, [
+                'notes' => 'Transfer keluar ke lokasi lain',
+                'reference_number' => $options['reference_number'] ?? null,
+            ]));
+
+            // IN ke lokasi tujuan
+            $in = self::recordIn($itemType, $itemId, $toLocationId, $qty, array_merge($options, [
+                'notes' => 'Transfer masuk dari lokasi lain',
+                'reference_number' => $options['reference_number'] ?? null,
+            ]));
+
+            DB::commit();
+            return ['out' => $out, 'in' => $in];
+        } catch (\Exception $e) {
+            DB::rollBack();
+            throw $e;
+        }
+    }
+
+    /**
+     * CATAT ADJUSTMENT (koreksi stok)
+     * 
+     * qty bisa positif (surplus) atau negatif (minus)
+     */
+    public static function recordAdjustment(
+        string $itemType,
+        int $itemId,
+        int $locationId,
+        float $qty,
+        array $options = []
+    ): StockMovement {
+        if ($qty == 0) {
+            throw new \Exception('Qty adjustment tidak boleh 0.');
+        }
+
+        return self::recordMovement($itemType, $itemId, $locationId, 'adjustment', $qty, $options);
+    }
+
+    /**
+     * CORE: Catat movement & update inventory
+     */
+    protected static function recordMovement(
+        string $itemType,
+        int $itemId,
+        int $locationId,
+        string $type,
+        float $qty,
+        array $options = []
+    ): StockMovement {
+        DB::beginTransaction();
+        try {
+            // Get atau create inventory record
+            $inventory = Inventory::getOrCreate($itemType, $itemId, $locationId);
+
+            $qtyBefore = (float) $inventory->qty;
+            $qtyAfter = $qtyBefore + $qty;
+
+            // Validasi: stok tidak boleh negatif (kecuali adjustment)
+            if ($qtyAfter < 0 && $type !== 'adjustment') {
+                DB::rollBack();
+                throw new \Exception("Stok akan negatif. Qty before: {$qtyBefore}, qty: {$qty}.");
+            }
+
+            // Hitung unit_price & total_value
+            $unitPrice = $options['unit_price'] ?? null;
+            $totalValue = $unitPrice ? abs($qty) * $unitPrice : null;
+
+            // Buat movement record
+            $movement = StockMovement::create([
+                'movement_number' => StockMovement::generateNumber(),
+                'item_type' => $itemType,
+                'item_id' => $itemId,
+                'location_id' => $locationId,
+                'type' => $type,
+                'qty' => $qty,
+                'qty_before' => $qtyBefore,
+                'qty_after' => $qtyAfter,
+                'unit_price' => $unitPrice,
+                'total_value' => $totalValue,
+                'reference_type' => $options['reference_type'] ?? null,
+                'reference_id' => $options['reference_id'] ?? null,
+                'reference_number' => $options['reference_number'] ?? null,
+                'date' => $options['date'] ?? now()->toDateString(),
+                'notes' => $options['notes'] ?? null,
+                'created_by' => auth()->id(),
+            ]);
+
+            // Update inventory
+            $inventory->update([
+                'qty' => $qtyAfter,
+                'last_movement_at' => now(),
+            ]);
+
+            DB::commit();
+            return $movement;
+        } catch (\Exception $e) {
+            DB::rollBack();
+            throw $e;
+        }
+    }
+}
+
+
+########## VIEWS WAREHOUSE ##########
+
+
+
+=== FILE: resources\views\warehouse\inventories\index.blade.php ===
+
+<x-app-layout>
+    <x-slot name="header">
+        <h2 class="font-serif text-2xl font-bold text-white">Inventory</h2>
+    </x-slot>
+
+    <div class="p-6 lg:p-8 space-y-6 grid-bg">
+
+        <x-atelier.page-header
+            segment="M4A"
+            title="Inventory"
+            subtitle="Stok barang di semua lokasi"
+        />
+
+        @if(session('success'))
+            <div class="bg-green-500/10 border border-green-500/30 text-green-400 px-4 py-3 rounded-lg text-sm">
+                {{ session('success') }}
+            </div>
+        @endif
+
+        {{-- STATS --}}
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="bg-navy-900/50 border border-navy-800 rounded-xl p-5">
+                <p class="text-[10px] font-mono text-navy-400 uppercase tracking-widest mb-1">Item Tersedia</p>
+                <p class="font-serif text-3xl font-bold text-white">{{ $stats['total_items'] }}</p>
+            </div>
+            <div class="bg-navy-900/50 border border-navy-800 rounded-xl p-5">
+                <p class="text-[10px] font-mono text-navy-400 uppercase tracking-widest mb-1">Lokasi Aktif</p>
+                <p class="font-serif text-3xl font-bold text-white">{{ $stats['total_locations'] }}</p>
+            </div>
+            <div class="bg-navy-900/50 border {{ $stats['low_stock_count'] > 0 ? 'border-red-500/50' : 'border-navy-800' }} rounded-xl p-5">
+                <p class="text-[10px] font-mono {{ $stats['low_stock_count'] > 0 ? 'text-red-400' : 'text-navy-400' }} uppercase tracking-widest mb-1">Stok Rendah</p>
+                <p class="font-serif text-3xl font-bold {{ $stats['low_stock_count'] > 0 ? 'text-red-400' : 'text-white' }}">{{ $stats['low_stock_count'] }}</p>
+            </div>
+            <div class="bg-navy-900/50 border border-navy-800 rounded-xl p-5">
+                <p class="text-[10px] font-mono text-navy-400 uppercase tracking-widest mb-1">Total Value</p>
+                <p class="font-serif text-2xl font-bold text-white">{{ format_rupiah($stats['total_value']) }}</p>
+            </div>
+        </div>
+
+        <x-atelier.card :brackets="true" padding="p-0">
+            <div class="px-5 py-4 border-b border-navy-800">
+                <form method="GET" action="{{ route('warehouse.inventories.index') }}" class="flex gap-3 flex-wrap">
+                    <input
+                        type="text"
+                        name="search"
+                        value="{{ request('search') }}"
+                        placeholder="Cari kode atau nama item..."
+                        class="flex-1 min-w-[200px] px-3 py-2 bg-navy-950 border border-navy-700 rounded-lg text-sm text-white placeholder-navy-500 focus:border-gold-500 focus:ring-2 focus:ring-gold-500/20 focus:outline-none transition"
+                    >
+                    <select name="warehouse_id" class="px-3 py-2 bg-navy-950 border border-navy-700 rounded-lg text-sm text-white focus:border-gold-500 focus:ring-2 focus:ring-gold-500/20 focus:outline-none transition">
+                        <option value="">Semua Warehouse</option>
+                        @foreach($warehouses as $wh)
+                            <option value="{{ $wh->id }}" @selected(request('warehouse_id') == $wh->id)>
+                                {{ $wh->nama }}
+                            </option>
+                        @endforeach
+                    </select>
+                    <select name="item_type" class="px-3 py-2 bg-navy-950 border border-navy-700 rounded-lg text-sm text-white focus:border-gold-500 focus:ring-2 focus:ring-gold-500/20 focus:outline-none transition">
+                        <option value="">Semua Type</option>
+                        <option value="material" @selected(request('item_type') == 'material')>Material</option>
+                        <option value="product" @selected(request('item_type') == 'product')>Product</option>
+                    </select>
+                    <label class="flex items-center gap-2 px-3 py-2 bg-navy-950 border border-navy-700 rounded-lg text-sm text-white cursor-pointer hover:border-gold-500/50">
+                        <input type="checkbox" name="low_stock" value="1" @checked(request('low_stock'))
+                               class="rounded border-navy-600 bg-navy-900 text-gold-500 focus:ring-gold-500">
+                        <span>Stok Rendah</span>
+                    </label>
+                    <x-atelier.button type="submit" variant="secondary">Filter</x-atelier.button>
+                    @if(request()->hasAny(['search', 'warehouse_id', 'item_type', 'low_stock']))
+                        <x-atelier.button :href="route('warehouse.inventories.index')" variant="ghost">Reset</x-atelier.button>
+                    @endif
+                </form>
+            </div>
+
+            @if($items->count() > 0)
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-navy-950/50 border-b border-navy-800">
+                            <tr>
+                                <th class="px-5 py-3 text-left text-[10px] font-mono font-semibold text-navy-400 uppercase tracking-widest">Item</th>
+                                <th class="px-5 py-3 text-left text-[10px] font-mono font-semibold text-navy-400 uppercase tracking-widest">Type</th>
+                                <th class="px-5 py-3 text-left text-[10px] font-mono font-semibold text-navy-400 uppercase tracking-widest">Lokasi</th>
+                                <th class="px-5 py-3 text-right text-[10px] font-mono font-semibold text-navy-400 uppercase tracking-widest">Qty</th>
+                                <th class="px-5 py-3 text-right text-[10px] font-mono font-semibold text-navy-400 uppercase tracking-widest">Min / Max</th>
+                                <th class="px-5 py-3 text-left text-[10px] font-mono font-semibold text-navy-400 uppercase tracking-widest">Status</th>
+                                <th class="px-5 py-3 text-right text-[10px] font-mono font-semibold text-navy-400 uppercase tracking-widest">Value</th>
+                                <th class="px-5 py-3 text-right text-[10px] font-mono font-semibold text-navy-400 uppercase tracking-widest">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-navy-800">
+                            @foreach($items as $inv)
+                                <tr class="hover:bg-navy-800/30 transition">
+                                    <td class="px-5 py-3 text-sm">
+                                        @if($inv->item)
+                                            <span class="text-white font-medium">{{ $inv->item->nama }}</span>
+                                            <br><span class="text-xs font-mono text-gold-500">{{ $inv->item->kode }}</span>
+                                        @else
+                                            <span class="text-navy-500 italic">Item tidak ditemukan</span>
+                                        @endif
+                                    </td>
+                                    <td class="px-5 py-3">
+                                        @php
+                                            $typeColor = $inv->item_type === 'material'
+                                                ? 'bg-blue-500/10 text-blue-400 border-blue-500/30'
+                                                : 'bg-green-500/10 text-green-400 border-green-500/30';
+                                        @endphp
+                                        <span class="inline-flex items-center text-xs px-2 py-0.5 rounded-full border {{ $typeColor }}">
+                                            {{ ucfirst($inv->item_type) }}
+                                        </span>
+                                    </td>
+                                    <td class="px-5 py-3 text-sm text-navy-300">
+                                        {{ $inv->location->nama ?? '-' }}
+                                        <br><span class="text-xs text-navy-500">{{ $inv->location->warehouse->nama ?? '-' }}</span>
+                                    </td>
+                                    <td class="px-5 py-3 text-right">
+                                        <span class="text-sm font-mono {{ $inv->is_low_stock ? 'text-red-400' : 'text-white' }}">
+                                            {{ format_angka($inv->qty, 2) }}
+                                        </span>
+                                    </td>
+                                    <td class="px-5 py-3 text-right text-xs font-mono text-navy-400">
+                                        {{ $inv->min_stock ? format_angka($inv->min_stock, 0) : '-' }}
+                                        /
+                                        {{ $inv->max_stock ? format_angka($inv->max_stock, 0) : '-' }}
+                                    </td>
+                                    <td class="px-5 py-3">
+                                        @if($inv->is_low_stock)
+                                            <span class="inline-flex items-center gap-1.5 text-xs text-red-400">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-red-400"></span>Low Stock
+                                            </span>
+                                        @elseif($inv->qty > 0)
+                                            <span class="inline-flex items-center gap-1.5 text-xs text-green-400">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-green-400"></span>Tersedia
+                                            </span>
+                                        @else
+                                            <span class="inline-flex items-center gap-1.5 text-xs text-navy-500">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-navy-500"></span>Kosong
+                                            </span>
+                                        @endif
+                                    </td>
+                                    <td class="px-5 py-3 text-right font-mono text-sm text-gold-500">
+                                        {{ format_rupiah($inv->total_value) }}
+                                    </td>
+                                    <td class="px-5 py-3 text-right">
+                                        <x-atelier.button :href="route('warehouse.inventories.show', $inv)" variant="ghost" size="sm">Detail</x-atelier.button>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+
+                @if($items->hasPages())
+                    <div class="px-5 py-4 border-t border-navy-800">
+                        {{ $items->links() }}
+                    </div>
+                @endif
+            @else
+                <x-atelier.empty-state
+                    title="Belum ada inventory"
+                    subtitle="Inventory akan muncul otomatis saat ada barang masuk dari Goods Receipt atau Material Issue."
+                />
+            @endif
+        </x-atelier.card>
+
+    </div>
+</x-app-layout>
+
+
+=== FILE: resources\views\warehouse\inventories\show.blade.php ===
+
+<x-app-layout>
+    <x-slot name="header">
+        <h2 class="font-serif text-2xl font-bold text-white">Detail Inventory</h2>
+    </x-slot>
+
+    <div class="p-6 lg:p-8 space-y-6 grid-bg">
+
+        <x-atelier.page-header
+            segment="M4A"
+            title="{{ $item->item->nama ?? 'Item' }}"
+            subtitle="Kode: {{ $item->item->kode ?? '-' }}"
+        />
+
+        @if(session('success'))
+            <div class="bg-green-500/10 border border-green-500/30 text-green-400 px-4 py-3 rounded-lg text-sm">
+                {{ session('success') }}
+            </div>
+        @endif
+
+        <x-atelier.card title="Informasi Item" :brackets="true">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <p class="text-[10px] font-mono text-navy-500 uppercase tracking-widest mb-1">Item</p>
+                    <p class="text-sm text-white font-medium">{{ $item->item->nama ?? '-' }}</p>
+                    <p class="text-xs font-mono text-gold-500">{{ $item->item->kode ?? '-' }}</p>
+                </div>
+                <div>
+                    <p class="text-[10px] font-mono text-navy-500 uppercase tracking-widest mb-1">Type</p>
+                    <p class="text-sm text-navy-300">{{ ucfirst($item->item_type) }}</p>
+                </div>
+                <div>
+                    <p class="text-[10px] font-mono text-navy-500 uppercase tracking-widest mb-1">Lokasi</p>
+                    <p class="text-sm text-white">{{ $item->location->nama ?? '-' }}</p>
+                    <p class="text-xs text-navy-500">{{ $item->location->warehouse->nama ?? '-' }}</p>
+                </div>
+                <div>
+                    <p class="text-[10px] font-mono text-navy-500 uppercase tracking-widest mb-1">Last Movement</p>
+                    <p class="text-sm text-navy-300">{{ $item->last_movement_at ? format_tanggal_waktu($item->last_movement_at) : '-' }}</p>
+                </div>
+            </div>
+        </x-atelier.card>
+
+        {{-- STOK --}}
+        <x-atelier.card title="Stok" :brackets="true">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-gradient-to-br {{ $item->is_low_stock ? 'from-red-500/10 border-red-500/30' : 'from-gold-500/10 border-gold-500/30' }} to-navy-900/50 border rounded-lg p-5">
+                    <p class="text-[10px] font-mono {{ $item->is_low_stock ? 'text-red-400' : 'text-gold-500' }} uppercase tracking-widest mb-1">Stok Saat Ini</p>
+                    <p class="font-serif text-3xl font-bold text-white">
+                        {{ format_angka($item->qty, 2) }}
+                    </p>
+                    @if($item->is_low_stock)
+                        <p class="text-xs text-red-400 mt-1">âš  Di bawah minimum!</p>
+                    @endif
+                </div>
+                <div class="bg-navy-800/30 border border-navy-700 rounded-lg p-5">
+                    <p class="text-[10px] font-mono text-navy-500 uppercase tracking-widest mb-1">Stok Minimum</p>
+                    <p class="font-serif text-3xl font-bold text-white">
+                        {{ $item->min_stock ? format_angka($item->min_stock, 2) : '-' }}
+                    </p>
+                </div>
+                <div class="bg-navy-800/30 border border-navy-700 rounded-lg p-5">
+                    <p class="text-[10px] font-mono text-navy-500 uppercase tracking-widest mb-1">Stok Maksimum</p>
+                    <p class="font-serif text-3xl font-bold text-white">
+                        {{ $item->max_stock ? format_angka($item->max_stock, 2) : '-' }}
+                    </p>
+                </div>
+            </div>
+        </x-atelier.card>
+
+        {{-- FORM UPDATE MIN/MAX --}}
+        <x-atelier.card title="Setting Min/Max Stock" subtitle="Atur batas stok minimum dan maksimum" :brackets="true">
+            <form method="POST" action="{{ route('warehouse.inventories.update', $item) }}">
+                @csrf
+                @method('PUT')
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <x-atelier.input name="min_stock" label="Stok Minimum" type="number" step="0.01" :value="$item->min_stock" hint="Alert kalau stok â‰¤ ini" />
+                    <x-atelier.input name="max_stock" label="Stok Maksimum" type="number" step="0.01" :value="$item->max_stock" />
+                </div>
+
+                <div class="flex items-center justify-end gap-3 mt-6 pt-6 border-t border-navy-800">
+                    <x-atelier.button type="submit" variant="primary">Simpan Setting</x-atelier.button>
+                </div>
+            </form>
+        </x-atelier.card>
+
+        {{-- Placeholder Stock Movement --}}
+        <x-atelier.card title="Riwayat Pergerakan" subtitle="Akan tersedia setelah modul Stock Movement selesai" :brackets="true">
+            <div class="p-8 text-center border border-dashed border-navy-700 rounded-lg">
+                <p class="text-sm text-navy-400">Riwayat pergerakan akan muncul di sini.</p>
+            </div>
+        </x-atelier.card>
+
+        <div class="flex items-center justify-between gap-3">
+            <x-atelier.button :href="route('warehouse.inventories.index')" variant="ghost">Kembali</x-atelier.button>
+        </div>
+
+    </div>
+</x-app-layout>
+
+
+=== FILE: resources\views\warehouse\locations\create.blade.php ===
+
+<x-app-layout>
+    <x-slot name="header">
+        <h2 class="font-serif text-2xl font-bold text-white">Tambah Location</h2>
+    </x-slot>
+
+    <div class="p-6 lg:p-8 space-y-6 grid-bg">
+
+        <x-atelier.page-header segment="M4A" title="Tambah Location" subtitle="Isi data rak / lokasi baru" />
+
+        @if($errors->any())
+            <div class="bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 rounded-lg text-sm">
+                <p class="font-semibold mb-1">Ada kesalahan:</p>
+                <ul class="list-disc list-inside space-y-0.5">
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
+        <form method="POST" action="{{ route('warehouse.locations.store') }}">
+            @csrf
+
+            <x-atelier.card title="Informasi Location" :brackets="true">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+
+                    <div class="md:col-span-2">
+                        <label class="block text-xs font-semibold text-navy-300 uppercase tracking-wider mb-2">
+                            Warehouse <span class="text-red-400">*</span>
+                        </label>
+                        <select name="warehouse_id" required class="w-full px-3 py-2.5 bg-navy-950 border border-navy-700 rounded-lg text-sm text-white focus:border-gold-500 focus:ring-2 focus:ring-gold-500/20 focus:outline-none transition">
+                            <option value="">-- Pilih Warehouse --</option>
+                            @foreach($warehouses as $wh)
+                                <option value="{{ $wh->id }}" @selected(old('warehouse_id', $selectedWarehouseId) == $wh->id)>
+                                    {{ $wh->kode }} â€” {{ $wh->nama }} ({{ $wh->type }})
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <x-atelier.input name="kode" label="Kode Location" :value="$generatedKode" required hint="Auto-generate dari warehouse, bisa diubah" />
+                    <x-atelier.input name="nama" label="Nama Location" placeholder="Rak A-01" required />
+                    <x-atelier.input name="capacity" label="Capacity" type="number" step="0.01" placeholder="1000" hint="Opsional, dalam unit" />
+                </div>
+            </x-atelier.card>
+
+            <x-atelier.card :brackets="true">
+                <div class="flex items-center gap-3">
+                    <input type="hidden" name="is_active" value="0">
+                    <input type="checkbox" name="is_active" id="is_active" value="1" checked class="rounded border-navy-600 bg-navy-950 text-gold-500 focus:ring-gold-500">
+                    <label for="is_active" class="text-sm text-navy-300">Location Aktif</label>
+                </div>
+
+                <div class="mt-5">
+                    <label class="block text-xs font-semibold text-navy-300 uppercase tracking-wider mb-2">Catatan</label>
+                    <textarea name="notes" rows="2" placeholder="Catatan tambahan..." class="w-full px-3 py-2.5 bg-navy-950 border border-navy-700 rounded-lg text-sm text-white placeholder-navy-500 focus:border-gold-500 focus:ring-2 focus:ring-gold-500/20 focus:outline-none transition">{{ old('notes') }}</textarea>
+                </div>
+
+                <div class="flex items-center justify-end gap-3 mt-6 pt-6 border-t border-navy-800">
+                    <x-atelier.button :href="route('warehouse.locations.index')" variant="ghost">Batal</x-atelier.button>
+                    <x-atelier.button type="submit" variant="primary">Simpan Location</x-atelier.button>
+                </div>
+            </x-atelier.card>
+
+        </form>
+
+    </div>
+</x-app-layout>
+
+
+=== FILE: resources\views\warehouse\locations\edit.blade.php ===
+
+<x-app-layout>
+    <x-slot name="header">
+        <h2 class="font-serif text-2xl font-bold text-white">Edit Location</h2>
+    </x-slot>
+
+    <div class="p-6 lg:p-8 space-y-6 grid-bg">
+
+        <x-atelier.page-header segment="M4A" title="Edit Location" subtitle="{{ $item->kode }} â€” {{ $item->nama }}" />
+
+        @if($errors->any())
+            <div class="bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 rounded-lg text-sm">
+                <p class="font-semibold mb-1">Ada kesalahan:</p>
+                <ul class="list-disc list-inside space-y-0.5">
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
+        <form method="POST" action="{{ route('warehouse.locations.update', $item) }}">
+            @csrf
+            @method('PUT')
+
+            <x-atelier.card title="Informasi Location" :brackets="true">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+
+                    <div class="md:col-span-2">
+                        <label class="block text-xs font-semibold text-navy-300 uppercase tracking-wider mb-2">
+                            Warehouse <span class="text-red-400">*</span>
+                        </label>
+                        <select name="warehouse_id" required class="w-full px-3 py-2.5 bg-navy-950 border border-navy-700 rounded-lg text-sm text-white focus:border-gold-500 focus:ring-2 focus:ring-gold-500/20 focus:outline-none transition">
+                            @foreach($warehouses as $wh)
+                                <option value="{{ $wh->id }}" @selected(old('warehouse_id', $item->warehouse_id) == $wh->id)>
+                                    {{ $wh->kode }} â€” {{ $wh->nama }} ({{ $wh->type }})
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <x-atelier.input name="kode" label="Kode Location" :value="$item->kode" required />
+                    <x-atelier.input name="nama" label="Nama Location" :value="$item->nama" required />
+                    <x-atelier.input name="capacity" label="Capacity" type="number" step="0.01" :value="$item->capacity" />
+                </div>
+            </x-atelier.card>
+
+            <x-atelier.card :brackets="true">
+                <div class="flex items-center gap-3">
+                    <input type="hidden" name="is_active" value="0">
+                    <input type="checkbox" name="is_active" id="is_active" value="1" {{ $item->is_active ? 'checked' : '' }} class="rounded border-navy-600 bg-navy-950 text-gold-500 focus:ring-gold-500">
+                    <label for="is_active" class="text-sm text-navy-300">Location Aktif</label>
+                </div>
+
+                <div class="mt-5">
+                    <label class="block text-xs font-semibold text-navy-300 uppercase tracking-wider mb-2">Catatan</label>
+                    <textarea name="notes" rows="2" class="w-full px-3 py-2.5 bg-navy-950 border border-navy-700 rounded-lg text-sm text-white placeholder-navy-500 focus:border-gold-500 focus:ring-2 focus:ring-gold-500/20 focus:outline-none transition">{{ old('notes', $item->notes) }}</textarea>
+                </div>
+
+                <div class="flex items-center justify-end gap-3 mt-6 pt-6 border-t border-navy-800">
+                    <x-atelier.button :href="route('warehouse.locations.index')" variant="ghost">Batal</x-atelier.button>
+                    <x-atelier.button type="submit" variant="primary">Simpan Perubahan</x-atelier.button>
+                </div>
+            </x-atelier.card>
+
+        </form>
+
+    </div>
+</x-app-layout>
+
+
+=== FILE: resources\views\warehouse\locations\index.blade.php ===
+
+<x-app-layout>
+    <x-slot name="header">
+        <h2 class="font-serif text-2xl font-bold text-white">Location</h2>
+    </x-slot>
+
+    <div class="p-6 lg:p-8 space-y-6 grid-bg">
+
+        <x-atelier.page-header
+            segment="M4A"
+            title="Location"
+            subtitle="Daftar rak / lokasi penyimpanan"
+            action="Tambah Location"
+            :actionUrl="route('warehouse.locations.create')"
+        />
+
+        @if(session('success'))
+            <div class="bg-green-500/10 border border-green-500/30 text-green-400 px-4 py-3 rounded-lg text-sm">
+                {{ session('success') }}
+            </div>
+        @endif
+
+        <x-atelier.card :brackets="true" padding="p-0">
+            <div class="px-5 py-4 border-b border-navy-800">
+                <form method="GET" action="{{ route('warehouse.locations.index') }}" class="flex gap-3 flex-wrap">
+                    <input
+                        type="text"
+                        name="search"
+                        value="{{ request('search') }}"
+                        placeholder="Cari kode, nama..."
+                        class="flex-1 min-w-[200px] px-3 py-2 bg-navy-950 border border-navy-700 rounded-lg text-sm text-white placeholder-navy-500 focus:border-gold-500 focus:ring-2 focus:ring-gold-500/20 focus:outline-none transition"
+                    >
+                    <select name="warehouse_id" class="px-3 py-2 bg-navy-950 border border-navy-700 rounded-lg text-sm text-white focus:border-gold-500 focus:ring-2 focus:ring-gold-500/20 focus:outline-none transition">
+                        <option value="">Semua Warehouse</option>
+                        @foreach($warehouses as $wh)
+                            <option value="{{ $wh->id }}" @selected(request('warehouse_id') == $wh->id)>
+                                {{ $wh->kode }} â€” {{ $wh->nama }}
+                            </option>
+                        @endforeach
+                    </select>
+                    <x-atelier.button type="submit" variant="secondary">Filter</x-atelier.button>
+                    @if(request('search') || request('warehouse_id'))
+                        <x-atelier.button :href="route('warehouse.locations.index')" variant="ghost">Reset</x-atelier.button>
+                    @endif
+                </form>
+            </div>
+
+            @if($items->count() > 0)
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-navy-950/50 border-b border-navy-800">
+                            <tr>
+                                <th class="px-5 py-3 text-left text-[10px] font-mono font-semibold text-navy-400 uppercase tracking-widest">Kode</th>
+                                <th class="px-5 py-3 text-left text-[10px] font-mono font-semibold text-navy-400 uppercase tracking-widest">Nama</th>
+                                <th class="px-5 py-3 text-left text-[10px] font-mono font-semibold text-navy-400 uppercase tracking-widest">Warehouse</th>
+                                <th class="px-5 py-3 text-right text-[10px] font-mono font-semibold text-navy-400 uppercase tracking-widest">Capacity</th>
+                                <th class="px-5 py-3 text-left text-[10px] font-mono font-semibold text-navy-400 uppercase tracking-widest">Status</th>
+                                <th class="px-5 py-3 text-right text-[10px] font-mono font-semibold text-navy-400 uppercase tracking-widest">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-navy-800">
+                            @foreach($items as $location)
+                                <tr class="hover:bg-navy-800/30 transition">
+                                    <td class="px-5 py-3 text-sm font-mono text-gold-500">{{ $location->kode }}</td>
+                                    <td class="px-5 py-3 text-sm text-white font-medium">{{ $location->nama }}</td>
+                                    <td class="px-5 py-3 text-sm text-navy-300">
+                                        {{ $location->warehouse->nama ?? '-' }}
+                                    </td>
+                                    <td class="px-5 py-3 text-sm text-right font-mono text-navy-300">
+                                        {{ $location->capacity ? format_angka($location->capacity, 2) : '-' }}
+                                    </td>
+                                    <td class="px-5 py-3">
+                                        @if($location->is_active)
+                                            <span class="inline-flex items-center gap-1.5 text-xs text-green-400">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-green-400"></span>Aktif
+                                            </span>
+                                        @else
+                                            <span class="inline-flex items-center gap-1.5 text-xs text-navy-500">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-navy-500"></span>Nonaktif
+                                            </span>
+                                        @endif
+                                    </td>
+                                    <td class="px-5 py-3 text-right">
+                                        <div class="flex items-center justify-end gap-2">
+                                            <x-atelier.button :href="route('warehouse.locations.show', $location)" variant="ghost" size="sm">Lihat</x-atelier.button>
+                                            <x-atelier.button :href="route('warehouse.locations.edit', $location)" variant="secondary" size="sm">Edit</x-atelier.button>
+                                            <form method="POST" action="{{ route('warehouse.locations.destroy', $location) }}" onsubmit="return confirm('Yakin hapus location ini?')" class="inline">
+                                                @csrf
+                                                @method('DELETE')
+                                                <x-atelier.button type="submit" variant="danger" size="sm">Hapus</x-atelier.button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+
+                @if($items->hasPages())
+                    <div class="px-5 py-4 border-t border-navy-800">
+                        {{ $items->links() }}
+                    </div>
+                @endif
+            @else
+                <x-atelier.empty-state
+                    title="Belum ada location"
+                    subtitle="Mulai dengan menambahkan location pertama."
+                    action="Tambah Location"
+                    :actionUrl="route('warehouse.locations.create')"
+                />
+            @endif
+        </x-atelier.card>
+
+    </div>
+</x-app-layout>
+
+
+=== FILE: resources\views\warehouse\locations\show.blade.php ===
+
+<x-app-layout>
+    <x-slot name="header">
+        <h2 class="font-serif text-2xl font-bold text-white">Detail Location</h2>
+    </x-slot>
+
+    <div class="p-6 lg:p-8 space-y-6 grid-bg">
+
+        <x-atelier.page-header
+            segment="M4A"
+            title="{{ $item->nama }}"
+            subtitle="Kode: {{ $item->kode }}"
+            action="Edit"
+            :actionUrl="route('warehouse.locations.edit', $item)"
+        />
+
+        <x-atelier.card title="Informasi Location" :brackets="true">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <p class="text-[10px] font-mono text-navy-500 uppercase tracking-widest mb-1">Kode</p>
+                    <p class="text-sm text-gold-500 font-mono">{{ $item->kode }}</p>
+                </div>
+                <div>
+                    <p class="text-[10px] font-mono text-navy-500 uppercase tracking-widest mb-1">Nama</p>
+                    <p class="text-sm text-white font-medium">{{ $item->nama }}</p>
+                </div>
+                <div>
+                    <p class="text-[10px] font-mono text-navy-500 uppercase tracking-widest mb-1">Warehouse</p>
+                    <p class="text-sm text-navy-300">{{ $item->warehouse->nama ?? '-' }}</p>
+                    @if($item->warehouse)
+                        <p class="text-xs text-navy-500 font-mono">{{ $item->warehouse->kode }}</p>
+                    @endif
+                </div>
+                <div>
+                    <p class="text-[10px] font-mono text-navy-500 uppercase tracking-widest mb-1">Capacity</p>
+                    <p class="text-sm text-navy-300">{{ $item->capacity ? format_angka($item->capacity, 2) : '-' }}</p>
+                </div>
+                <div>
+                    <p class="text-[10px] font-mono text-navy-500 uppercase tracking-widest mb-1">Status</p>
+                    @if($item->is_active)
+                        <span class="inline-flex items-center gap-1.5 text-xs text-green-400">
+                            <span class="w-1.5 h-1.5 rounded-full bg-green-400"></span>Aktif
+                        </span>
+                    @else
+                        <span class="inline-flex items-center gap-1.5 text-xs text-navy-500">
+                            <span class="w-1.5 h-1.5 rounded-full bg-navy-500"></span>Nonaktif
+                        </span>
+                    @endif
+                </div>
+                @if($item->notes)
+                    <div class="md:col-span-2">
+                        <p class="text-[10px] font-mono text-navy-500 uppercase tracking-widest mb-1">Catatan</p>
+                        <p class="text-sm text-navy-300">{{ $item->notes }}</p>
+                    </div>
+                @endif
+            </div>
+        </x-atelier.card>
+
+        {{-- Placeholder untuk Inventory --}}
+        <x-atelier.card title="Stok di Lokasi Ini" subtitle="Akan tersedia setelah modul Inventory selesai" :brackets="true">
+            <div class="p-8 text-center border border-dashed border-navy-700 rounded-lg">
+                <p class="text-sm text-navy-400">Belum ada data stok. Akan dibuat di M4A bagian berikutnya.</p>
+            </div>
+        </x-atelier.card>
+
+        <div class="flex items-center justify-between gap-3">
+            <x-atelier.button :href="route('warehouse.locations.index')" variant="ghost">Kembali</x-atelier.button>
+            <form method="POST" action="{{ route('warehouse.locations.destroy', $item) }}" onsubmit="return confirm('Yakin hapus location ini?')">
+                @csrf
+                @method('DELETE')
+                <x-atelier.button type="submit" variant="danger">Hapus Location</x-atelier.button>
+            </form>
+        </div>
+
+    </div>
+</x-app-layout>
+
+
+=== FILE: resources\views\warehouse\stock-movements\create.blade.php ===
+
+<x-app-layout>
+    <x-slot name="header">
+        <h2 class="font-serif text-2xl font-bold text-white">Catat Stock Movement</h2>
+    </x-slot>
+
+    @php
+        // Siapkan data untuk searchable dropdown
+        $itemOptions = collect()
+            ->merge($materials->map(fn($m) => [
+                'id' => 'material_' . $m->id,
+                'label' => '[MAT] ' . $m->kode . ' â€” ' . $m->nama,
+                'data' => ['type' => 'material', 'id' => (string) $m->id],
+            ]))
+            ->merge($products->map(fn($p) => [
+                'id' => 'product_' . $p->id,
+                'label' => '[PRD] ' . $p->kode . ' â€” ' . $p->nama,
+                'data' => ['type' => 'product', 'id' => (string) $p->id],
+            ]))
+            ->values()
+            ->all();
+
+        $locationOptions = $locations->map(fn($loc) => [
+            'id' => (string) $loc->id,
+            'label' => $loc->kode . ' â€” ' . $loc->nama . ' (' . ($loc->warehouse->nama ?? '-') . ')',
+        ])->values()->all();
+    @endphp
+
+    <div class="p-6 lg:p-8 space-y-6 grid-bg">
+
+        <x-atelier.page-header segment="M4A" title="Catat Movement" subtitle="Input pergerakan stok manual" />
+
+        @if($errors->any())
+            <div class="bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 rounded-lg text-sm">
+                <p class="font-semibold mb-1">Ada kesalahan:</p>
+                <ul class="list-disc list-inside space-y-0.5">
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
+        @if(session('error'))
+            <div class="bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 rounded-lg text-sm">
+                {{ session('error') }}
+            </div>
+        @endif
+
+        <form method="POST" action="{{ route('warehouse.stock-movements.store') }}" x-data="stockMovementForm()">
+            @csrf
+
+            <x-atelier.card title="Informasi Movement" :brackets="true">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+
+                    <div>
+                        <label class="block text-xs font-semibold text-navy-300 uppercase tracking-wider mb-2">
+                            Tipe Movement <span class="text-red-400">*</span>
+                        </label>
+                        <select name="type" required class="w-full px-3 py-2.5 bg-navy-950 border border-navy-700 rounded-lg text-sm text-white focus:border-gold-500 focus:ring-2 focus:ring-gold-500/20 focus:outline-none transition">
+                            <option value="in" @selected(old('type', $type) == 'in')>IN (Stok Masuk)</option>
+                            <option value="out" @selected(old('type', $type) == 'out')>OUT (Stok Keluar)</option>
+                            <option value="adjustment" @selected(old('type', $type) == 'adjustment')>ADJUSTMENT (Koreksi)</option>
+                        </select>
+                    </div>
+
+                    <x-atelier.input name="date" label="Tanggal" type="date" :value="old('date', date('Y-m-d'))" required />
+
+                    {{-- Hidden inputs untuk item_type dan item_id --}}
+                    <input type="hidden" name="item_type" x-model="selectedItemType" required>
+                    <input type="hidden" name="item_id" x-model="selectedItemId" required>
+
+                    {{-- ITEM SEARCHABLE --}}
+                    <div class="md:col-span-2">
+                        <label class="block text-xs font-semibold text-navy-300 uppercase tracking-wider mb-2">
+                            Item <span class="text-red-400">*</span>
+                        </label>
+                        <div x-data="searchable({
+                            items: @js($itemOptions),
+                            selected: '',
+                            name: 'item_selector',
+                            onChange: (id, data) => {
+                                selectedItemType = data.type || '';
+                                selectedItemId = data.id || '';
+                            }
+                        })" class="relative">
+                            <div x-ref="trigger" @click="toggle()"
+                                 class="w-full px-3 py-2.5 bg-navy-950 border border-navy-700 rounded-lg text-sm text-white cursor-pointer flex items-center justify-between"
+                                 :class="open && 'border-gold-500 ring-2 ring-gold-500/20'">
+                                <span x-show="selectedLabel" x-text="selectedLabel" class="truncate"></span>
+                                <span x-show="!selectedLabel" class="text-navy-500">-- Pilih Item --</span>
+                                <svg class="w-4 h-4 text-navy-500 flex-shrink-0" :class="open && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                </svg>
+                            </div>
+
+                            <template x-teleport="body">
+                                <div x-show="open" x-cloak :style="dropdownStyle"
+                                     class="bg-navy-800 border border-navy-700 rounded-lg shadow-xl overflow-hidden"
+                                     @click.away="open = false">
+                                    <div class="p-2 border-b border-navy-700">
+                                        <input type="text" x-model="search" :data-search-input="name"
+                                               @keydown.arrow-down.prevent="highlightNext()"
+                                               @keydown.arrow-up.prevent="highlightPrev()"
+                                               @keydown.enter.prevent="selectHighlighted()"
+                                               @keydown.escape="open = false"
+                                               placeholder="Cari material / product..."
+                                               class="w-full px-3 py-2 bg-navy-950 border border-navy-700 rounded text-sm text-white placeholder-navy-500 focus:border-gold-500 focus:ring-0 focus:outline-none">
+                                    </div>
+                                    <div class="max-h-64 overflow-y-auto">
+                                        <template x-for="(opt, idx) in filteredItems" :key="opt.id">
+                                            <div @click="select(opt)" @mouseenter="highlighted = idx"
+                                                 :data-option-index="idx"
+                                                 class="px-3 py-2 text-sm cursor-pointer"
+                                                 :class="highlighted === idx ? 'bg-gold-500 text-navy-900' : 'text-white hover:bg-navy-700'"
+                                                 x-text="opt.label"></div>
+                                        </template>
+                                        <template x-if="filteredItems.length === 0">
+                                            <div class="px-3 py-4 text-center text-sm text-navy-500">Tidak ada hasil</div>
+                                        </template>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                        <p class="text-xs text-navy-500 mt-1">
+                            Pilih item dari daftar. Tipe item (Material/Product) otomatis terisi.
+                        </p>
+                    </div>
+
+                    {{-- LOKASI SEARCHABLE --}}
+                    <div class="md:col-span-2">
+                        <label class="block text-xs font-semibold text-navy-300 uppercase tracking-wider mb-2">
+                            Lokasi <span class="text-red-400">*</span>
+                        </label>
+                        <div x-data="searchable({
+                            items: @js($locationOptions),
+                            selected: '{{ old('location_id') }}',
+                            name: 'location_id'
+                        })" class="relative">
+                            <input type="hidden" name="location_id" :value="selected" required>
+
+                            <div x-ref="trigger" @click="toggle()"
+                                 class="w-full px-3 py-2.5 bg-navy-950 border border-navy-700 rounded-lg text-sm text-white cursor-pointer flex items-center justify-between"
+                                 :class="open && 'border-gold-500 ring-2 ring-gold-500/20'">
+                                <span x-show="selectedLabel" x-text="selectedLabel" class="truncate"></span>
+                                <span x-show="!selectedLabel" class="text-navy-500">-- Pilih Lokasi --</span>
+                                <svg class="w-4 h-4 text-navy-500 flex-shrink-0" :class="open && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                </svg>
+                            </div>
+
+                            <template x-teleport="body">
+                                <div x-show="open" x-cloak :style="dropdownStyle"
+                                     class="bg-navy-800 border border-navy-700 rounded-lg shadow-xl overflow-hidden"
+                                     @click.away="open = false">
+                                    <div class="p-2 border-b border-navy-700">
+                                        <input type="text" x-model="search" :data-search-input="name"
+                                               @keydown.arrow-down.prevent="highlightNext()"
+                                               @keydown.arrow-up.prevent="highlightPrev()"
+                                               @keydown.enter.prevent="selectHighlighted()"
+                                               @keydown.escape="open = false"
+                                               placeholder="Cari lokasi..."
+                                               class="w-full px-3 py-2 bg-navy-950 border border-navy-700 rounded text-sm text-white placeholder-navy-500 focus:border-gold-500 focus:ring-0 focus:outline-none">
+                                    </div>
+                                    <div class="max-h-64 overflow-y-auto">
+                                        <template x-for="(opt, idx) in filteredItems" :key="opt.id">
+                                            <div @click="select(opt)" @mouseenter="highlighted = idx"
+                                                 :data-option-index="idx"
+                                                 class="px-3 py-2 text-sm cursor-pointer"
+                                                 :class="highlighted === idx ? 'bg-gold-500 text-navy-900' : 'text-white hover:bg-navy-700'"
+                                                 x-text="opt.label"></div>
+                                        </template>
+                                        <template x-if="filteredItems.length === 0">
+                                            <div class="px-3 py-4 text-center text-sm text-navy-500">Tidak ada hasil</div>
+                                        </template>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+
+                    <x-atelier.input name="qty" label="Qty" type="number" step="0.01" :value="old('qty')" required hint="Untuk adjustment, bisa positif atau negatif" />
+                    <x-atelier.input name="unit_price" label="Harga per Unit (Rp)" type="number" step="0.01" :value="old('unit_price')" hint="Opsional" />
+
+                    <div class="md:col-span-2">
+                        <label class="block text-xs font-semibold text-navy-300 uppercase tracking-wider mb-2">Catatan</label>
+                        <textarea name="notes" rows="2" placeholder="Catatan..." class="w-full px-3 py-2.5 bg-navy-950 border border-navy-700 rounded-lg text-sm text-white placeholder-navy-500 focus:border-gold-500 focus:ring-2 focus:ring-gold-500/20 focus:outline-none transition">{{ old('notes') }}</textarea>
+                    </div>
+                </div>
+            </x-atelier.card>
+
+            <div class="flex items-center justify-end gap-3">
+                <x-atelier.button :href="route('warehouse.stock-movements.index')" variant="ghost">Batal</x-atelier.button>
+                <x-atelier.button type="submit" variant="primary">Simpan Movement</x-atelier.button>
+            </div>
+
+        </form>
+
+    </div>
+
+    @push('scripts')
+    <script>
+        function searchable({ items, selected, name, onChange = null }) {
+            return {
+                items: items,
+                selected: selected || '',
+                search: '',
+                open: false,
+                highlighted: 0,
+                name: name,
+                onChange: onChange,
+                dropdownStyle: '',
+
+                get filteredItems() {
+                    if (!this.search) return this.items;
+                    const q = this.search.toLowerCase();
+                    return this.items.filter(i => i.label.toLowerCase().includes(q));
+                },
+
+                get selectedLabel() {
+                    const item = this.items.find(i => i.id === this.selected);
+                    return item ? item.label : '';
+                },
+
+                toggle() {
+                    this.open = !this.open;
+                    if (this.open) {
+                        this.search = '';
+                        this.highlighted = 0;
+                        this.$nextTick(() => {
+                            this.updatePosition();
+                            setTimeout(() => {
+                                const input = document.querySelector(`[data-search-input="${this.name}"]`);
+                                if (input) input.focus();
+                            }, 10);
+                        });
+                    }
+                },
+
+                updatePosition() {
+                    const trigger = this.$refs.trigger;
+                    if (!trigger) return;
+                    const rect = trigger.getBoundingClientRect();
+                    const dropdownHeight = 320;
+                    const spaceBelow = window.innerHeight - rect.bottom;
+                    const spaceAbove = rect.top;
+
+                    let top, maxHeight;
+
+                    if (spaceBelow >= dropdownHeight || spaceBelow >= spaceAbove) {
+                        top = rect.bottom + 4;
+                        maxHeight = Math.min(dropdownHeight, spaceBelow - 20);
+                    } else {
+                        maxHeight = Math.min(dropdownHeight, spaceAbove - 20);
+                        top = rect.top - maxHeight - 4;
+                    }
+
+                    this.dropdownStyle = `
+                        position: fixed;
+                        top: ${top}px;
+                        left: ${rect.left}px;
+                        width: ${rect.width}px;
+                        z-index: 9999;
+                    `;
+                },
+
+                select(opt) {
+                    this.selected = opt.id;
+                    this.open = false;
+                    if (this.onChange) this.onChange(opt.id, opt.data || {});
+                },
+
+                highlightNext() {
+                    if (this.highlighted < this.filteredItems.length - 1) this.highlighted++;
+                    this.scrollToHighlighted();
+                },
+                highlightPrev() {
+                    if (this.highlighted > 0) this.highlighted--;
+                    this.scrollToHighlighted();
+                },
+                scrollToHighlighted() {
+                    this.$nextTick(() => {
+                        const el = document.querySelector(`[data-option-index="${this.highlighted}"]`);
+                        if (el) el.scrollIntoView({ block: 'nearest' });
+                    });
+                },
+                selectHighlighted() {
+                    if (this.filteredItems[this.highlighted]) {
+                        this.select(this.filteredItems[this.highlighted]);
+                    }
+                },
+            }
+        }
+
+        function stockMovementForm() {
+            return {
+                selectedItemType: '{{ old('item_type', 'material') }}',
+                selectedItemId: '{{ old('item_id') }}',
+            }
+        }
+    </script>
+    @endpush
+
+</x-app-layout>
+
+
+=== FILE: resources\views\warehouse\stock-movements\index.blade.php ===
+
+<x-app-layout>
+    <x-slot name="header">
+        <h2 class="font-serif text-2xl font-bold text-white">Stock Movement</h2>
+    </x-slot>
+
+    <div class="p-6 lg:p-8 space-y-6 grid-bg">
+
+        <x-atelier.page-header
+            segment="M4A"
+            title="Stock Movement"
+            subtitle="Riwayat pergerakan stok"
+            action="Catat Movement"
+            :actionUrl="route('warehouse.stock-movements.create')"
+        />
+
+        @if(session('success'))
+            <div class="bg-green-500/10 border border-green-500/30 text-green-400 px-4 py-3 rounded-lg text-sm">
+                {{ session('success') }}
+            </div>
+        @endif
+
+        @if(session('error'))
+            <div class="bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 rounded-lg text-sm">
+                {{ session('error') }}
+            </div>
+        @endif
+
+        {{-- STATS --}}
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="bg-navy-900/50 border border-navy-800 rounded-xl p-5">
+                <p class="text-[10px] font-mono text-navy-400 uppercase tracking-widest mb-1">Total Movement</p>
+                <p class="font-serif text-3xl font-bold text-white">{{ $stats['total_movements'] }}</p>
+            </div>
+            <div class="bg-navy-900/50 border border-green-500/30 rounded-xl p-5">
+                <p class="text-[10px] font-mono text-green-400 uppercase tracking-widest mb-1">IN</p>
+                <p class="font-serif text-3xl font-bold text-white">{{ $stats['in_count'] }}</p>
+            </div>
+            <div class="bg-navy-900/50 border border-red-500/30 rounded-xl p-5">
+                <p class="text-[10px] font-mono text-red-400 uppercase tracking-widest mb-1">OUT</p>
+                <p class="font-serif text-3xl font-bold text-white">{{ $stats['out_count'] }}</p>
+            </div>
+            <div class="bg-navy-900/50 border border-gold-500/30 rounded-xl p-5">
+                <p class="text-[10px] font-mono text-gold-500 uppercase tracking-widest mb-1">Adjustment</p>
+                <p class="font-serif text-3xl font-bold text-white">{{ $stats['adjustment_count'] }}</p>
+            </div>
+        </div>
+
+        <x-atelier.card :brackets="true" padding="p-0">
+            <div class="px-5 py-4 border-b border-navy-800 flex items-center justify-between flex-wrap gap-3">
+                <form method="GET" action="{{ route('warehouse.stock-movements.index') }}" class="flex gap-3 flex-wrap flex-1">
+                    <input
+                        type="text"
+                        name="search"
+                        value="{{ request('search') }}"
+                        placeholder="Cari nomor, item, referensi..."
+                        class="flex-1 min-w-[200px] px-3 py-2 bg-navy-950 border border-navy-700 rounded-lg text-sm text-white placeholder-navy-500 focus:border-gold-500 focus:ring-2 focus:ring-gold-500/20 focus:outline-none transition"
+                    >
+                    <select name="type" class="px-3 py-2 bg-navy-950 border border-navy-700 rounded-lg text-sm text-white focus:border-gold-500 focus:ring-2 focus:ring-gold-500/20 focus:outline-none transition">
+                        <option value="">Semua Type</option>
+                        <option value="in" @selected(request('type') == 'in')>IN</option>
+                        <option value="out" @selected(request('type') == 'out')>OUT</option>
+                        <option value="transfer" @selected(request('type') == 'transfer')>Transfer</option>
+                        <option value="adjustment" @selected(request('type') == 'adjustment')>Adjustment</option>
+                    </select>
+                    <x-atelier.button type="submit" variant="secondary">Filter</x-atelier.button>
+                    @if(request()->hasAny(['search', 'type', 'warehouse_id']))
+                        <x-atelier.button :href="route('warehouse.stock-movements.index')" variant="ghost">Reset</x-atelier.button>
+                    @endif
+                </form>
+                <x-atelier.button :href="route('warehouse.stock-movements.transfer.create')" variant="secondary" size="sm">
+                    Transfer Stok
+                </x-atelier.button>
+            </div>
+
+            @if($items->count() > 0)
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-navy-950/50 border-b border-navy-800">
+                            <tr>
+                                <th class="px-5 py-3 text-left text-[10px] font-mono font-semibold text-navy-400 uppercase tracking-widest">No. Movement</th>
+                                <th class="px-5 py-3 text-left text-[10px] font-mono font-semibold text-navy-400 uppercase tracking-widest">Tanggal</th>
+                                <th class="px-5 py-3 text-left text-[10px] font-mono font-semibold text-navy-400 uppercase tracking-widest">Item</th>
+                                <th class="px-5 py-3 text-left text-[10px] font-mono font-semibold text-navy-400 uppercase tracking-widest">Lokasi</th>
+                                <th class="px-5 py-3 text-center text-[10px] font-mono font-semibold text-navy-400 uppercase tracking-widest">Type</th>
+                                <th class="px-5 py-3 text-right text-[10px] font-mono font-semibold text-navy-400 uppercase tracking-widest">Qty</th>
+                                <th class="px-5 py-3 text-right text-[10px] font-mono font-semibold text-navy-400 uppercase tracking-widest">Stok Akhir</th>
+                                <th class="px-5 py-3 text-right text-[10px] font-mono font-semibold text-navy-400 uppercase tracking-widest">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-navy-800">
+                            @foreach($items as $mov)
+                                <tr class="hover:bg-navy-800/30 transition">
+                                    <td class="px-5 py-3 text-sm font-mono text-gold-500">{{ $mov->movement_number }}</td>
+                                    <td class="px-5 py-3 text-sm text-navy-300">{{ format_tanggal($mov->date) }}</td>
+                                    <td class="px-5 py-3 text-sm">
+                                        @if($mov->item)
+                                            <span class="text-white font-medium">{{ $mov->item->nama }}</span>
+                                            <br><span class="text-xs font-mono text-navy-500">{{ $mov->item->kode }}</span>
+                                        @else
+                                            <span class="text-navy-500 italic">-</span>
+                                        @endif
+                                    </td>
+                                    <td class="px-5 py-3 text-sm text-navy-300">
+                                        {{ $mov->location->nama ?? '-' }}
+                                        <br><span class="text-xs text-navy-500">{{ $mov->location->warehouse->nama ?? '-' }}</span>
+                                    </td>
+                                    <td class="px-5 py-3 text-center">
+                                        <span class="inline-flex items-center text-xs px-2 py-0.5 rounded-full border {{ $mov->type_color }}">
+                                            {{ $mov->type_label }}
+                                        </span>
+                                    </td>
+                                    <td class="px-5 py-3 text-right font-mono text-sm {{ $mov->qty > 0 ? 'text-green-400' : 'text-red-400' }}">
+                                        {{ $mov->qty > 0 ? '+' : '' }}{{ format_angka($mov->qty, 2) }}
+                                    </td>
+                                    <td class="px-5 py-3 text-right font-mono text-sm text-white">
+                                        {{ format_angka($mov->qty_after, 2) }}
+                                    </td>
+                                    <td class="px-5 py-3 text-right">
+                                        <x-atelier.button :href="route('warehouse.stock-movements.show', $mov)" variant="ghost" size="sm">Detail</x-atelier.button>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+
+                @if($items->hasPages())
+                    <div class="px-5 py-4 border-t border-navy-800">
+                        {{ $items->links() }}
+                    </div>
+                @endif
+            @else
+                <x-atelier.empty-state
+                    title="Belum ada stock movement"
+                    subtitle="Mulai dengan mencatat pergerakan stok pertama."
+                    action="Catat Movement"
+                    :actionUrl="route('warehouse.stock-movements.create')"
+                />
+            @endif
+        </x-atelier.card>
+
+    </div>
+</x-app-layout>
+
+
+=== FILE: resources\views\warehouse\stock-movements\show.blade.php ===
+
+<x-app-layout>
+    <x-slot name="header">
+        <h2 class="font-serif text-2xl font-bold text-white">Detail Movement</h2>
+    </x-slot>
+
+    <div class="p-6 lg:p-8 space-y-6 grid-bg">
+
+        <x-atelier.page-header
+            segment="M4A"
+            title="{{ $item->movement_number }}"
+            subtitle="{{ $item->type_label }} â€” {{ format_tanggal($item->date) }}"
+        />
+
+        <x-atelier.card title="Informasi Movement" :brackets="true">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <p class="text-[10px] font-mono text-navy-500 uppercase tracking-widest mb-1">No. Movement</p>
+                    <p class="text-sm text-gold-500 font-mono">{{ $item->movement_number }}</p>
+                </div>
+                <div>
+                    <p class="text-[10px] font-mono text-navy-500 uppercase tracking-widest mb-1">Tipe</p>
+                    <span class="inline-flex items-center text-xs px-2 py-0.5 rounded-full border {{ $item->type_color }}">
+                        {{ $item->type_label }}
+                    </span>
+                </div>
+                <div>
+                    <p class="text-[10px] font-mono text-navy-500 uppercase tracking-widest mb-1">Tanggal</p>
+                    <p class="text-sm text-navy-300">{{ format_tanggal($item->date) }}</p>
+                </div>
+                <div>
+                    <p class="text-[10px] font-mono text-navy-500 uppercase tracking-widest mb-1">Item</p>
+                    <p class="text-sm text-white font-medium">{{ $item->item->nama ?? '-' }}</p>
+                    <p class="text-xs text-gold-500 font-mono">{{ $item->item->kode ?? '-' }}</p>
+                </div>
+                <div>
+                    <p class="text-[10px] font-mono text-navy-500 uppercase tracking-widest mb-1">Lokasi</p>
+                    <p class="text-sm text-navy-300">{{ $item->location->nama ?? '-' }}</p>
+                    <p class="text-xs text-navy-500">{{ $item->location->warehouse->nama ?? '-' }}</p>
+                </div>
+                <div>
+                    <p class="text-[10px] font-mono text-navy-500 uppercase tracking-widest mb-1">Dibuat Oleh</p>
+                    <p class="text-sm text-navy-300">{{ $item->createdBy->name ?? '-' }}</p>
+                </div>
+                @if($item->reference_number)
+                    <div>
+                        <p class="text-[10px] font-mono text-navy-500 uppercase tracking-widest mb-1">Referensi</p>
+                        <p class="text-sm text-navy-300">{{ $item->reference_number }}</p>
+                    </div>
+                @endif
+                @if($item->notes)
+                    <div class="md:col-span-2">
+                        <p class="text-[10px] font-mono text-navy-500 uppercase tracking-widest mb-1">Catatan</p>
+                        <p class="text-sm text-navy-300">{{ $item->notes }}</p>
+                    </div>
+                @endif
+            </div>
+        </x-atelier.card>
+
+        <x-atelier.card title="Perubahan Stok" :brackets="true">
+            <div class="grid grid-cols-3 gap-6">
+                <div class="bg-navy-800/30 border border-navy-700 rounded-lg p-5">
+                    <p class="text-[10px] font-mono text-navy-500 uppercase tracking-widest mb-1">Sebelum</p>
+                    <p class="font-serif text-2xl font-bold text-white">{{ format_angka($item->qty_before, 2) }}</p>
+                </div>
+                <div class="bg-gradient-to-br {{ $item->qty > 0 ? 'from-green-500/10 border-green-500/30' : 'from-red-500/10 border-red-500/30' }} to-navy-900/50 border rounded-lg p-5">
+                    <p class="text-[10px] font-mono {{ $item->qty > 0 ? 'text-green-400' : 'text-red-400' }} uppercase tracking-widest mb-1">Perubahan</p>
+                    <p class="font-serif text-2xl font-bold {{ $item->qty > 0 ? 'text-green-400' : 'text-red-400' }}">
+                        {{ $item->qty > 0 ? '+' : '' }}{{ format_angka($item->qty, 2) }}
+                    </p>
+                </div>
+                <div class="bg-gradient-to-br from-gold-500/10 to-navy-900/50 border border-gold-500/30 rounded-lg p-5">
+                    <p class="text-[10px] font-mono text-gold-500 uppercase tracking-widest mb-1">Sesudah</p>
+                    <p class="font-serif text-2xl font-bold text-white">{{ format_angka($item->qty_after, 2) }}</p>
+                </div>
+            </div>
+
+            @if($item->unit_price)
+                <div class="mt-6 pt-6 border-t border-navy-800">
+                    <div class="flex items-center justify-between text-sm mb-2">
+                        <span class="text-navy-400">Harga per Unit</span>
+                        <span class="text-white font-mono">{{ format_rupiah($item->unit_price) }}</span>
+                    </div>
+                    <div class="flex items-center justify-between text-sm">
+                        <span class="text-navy-400">Total Nilai</span>
+                        <span class="text-gold-500 font-mono">{{ format_rupiah($item->total_value) }}</span>
+                    </div>
+                </div>
+            @endif
+        </x-atelier.card>
+
+        <div class="flex items-center justify-between gap-3">
+            <x-atelier.button :href="route('warehouse.stock-movements.index')" variant="ghost">Kembali</x-atelier.button>
+        </div>
+
+    </div>
+</x-app-layout>
+
+
+=== FILE: resources\views\warehouse\stock-movements\transfer.blade.php ===
+
+<x-app-layout>
+    <x-slot name="header">
+        <h2 class="font-serif text-2xl font-bold text-white">Transfer Stok</h2>
+    </x-slot>
+
+    @php
+        $itemOptions = collect()
+            ->merge($materials->map(fn($m) => [
+                'id' => 'material_' . $m->id,
+                'label' => '[MAT] ' . $m->kode . ' â€” ' . $m->nama,
+                'data' => ['type' => 'material', 'id' => (string) $m->id],
+            ]))
+            ->merge($products->map(fn($p) => [
+                'id' => 'product_' . $p->id,
+                'label' => '[PRD] ' . $p->kode . ' â€” ' . $p->nama,
+                'data' => ['type' => 'product', 'id' => (string) $p->id],
+            ]))
+            ->values()
+            ->all();
+
+        $locationOptions = $locations->map(fn($loc) => [
+            'id' => (string) $loc->id,
+            'label' => $loc->kode . ' â€” ' . $loc->nama . ' (' . ($loc->warehouse->nama ?? '-') . ')',
+        ])->values()->all();
+    @endphp
+
+    <div class="p-6 lg:p-8 space-y-6 grid-bg">
+
+        <x-atelier.page-header segment="M4A" title="Transfer Stok" subtitle="Pindahkan stok antar lokasi" />
+
+        @if($errors->any())
+            <div class="bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 rounded-lg text-sm">
+                <p class="font-semibold mb-1">Ada kesalahan:</p>
+                <ul class="list-disc list-inside space-y-0.5">
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
+        @if(session('error'))
+            <div class="bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 rounded-lg text-sm">
+                {{ session('error') }}
+            </div>
+        @endif
+
+        <form method="POST" action="{{ route('warehouse.stock-movements.transfer.store') }}" x-data="transferForm()">
+            @csrf
+
+            <x-atelier.card title="Informasi Transfer" :brackets="true">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+
+                    <input type="hidden" name="item_type" x-model="selectedItemType" required>
+                    <input type="hidden" name="item_id" x-model="selectedItemId" required>
+
+                    <x-atelier.input name="date" label="Tanggal Transfer" type="date" :value="old('date', date('Y-m-d'))" required />
+
+                    {{-- ITEM --}}
+                    <div class="md:col-span-2">
+                        <label class="block text-xs font-semibold text-navy-300 uppercase tracking-wider mb-2">
+                            Item <span class="text-red-400">*</span>
+                        </label>
+                        <div x-data="searchable({
+                            items: @js($itemOptions),
+                            selected: '',
+                            name: 'item_selector',
+                            onChange: (id, data) => {
+                                selectedItemType = data.type || '';
+                                selectedItemId = data.id || '';
+                            }
+                        })" class="relative">
+                            <div x-ref="trigger" @click="toggle()"
+                                 class="w-full px-3 py-2.5 bg-navy-950 border border-navy-700 rounded-lg text-sm text-white cursor-pointer flex items-center justify-between"
+                                 :class="open && 'border-gold-500 ring-2 ring-gold-500/20'">
+                                <span x-show="selectedLabel" x-text="selectedLabel" class="truncate"></span>
+                                <span x-show="!selectedLabel" class="text-navy-500">-- Pilih Item --</span>
+                                <svg class="w-4 h-4 text-navy-500 flex-shrink-0" :class="open && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                </svg>
+                            </div>
+
+                            <template x-teleport="body">
+                                <div x-show="open" x-cloak :style="dropdownStyle"
+                                     class="bg-navy-800 border border-navy-700 rounded-lg shadow-xl overflow-hidden"
+                                     @click.away="open = false">
+                                    <div class="p-2 border-b border-navy-700">
+                                        <input type="text" x-model="search" :data-search-input="name"
+                                               @keydown.arrow-down.prevent="highlightNext()"
+                                               @keydown.arrow-up.prevent="highlightPrev()"
+                                               @keydown.enter.prevent="selectHighlighted()"
+                                               @keydown.escape="open = false"
+                                               placeholder="Cari item..."
+                                               class="w-full px-3 py-2 bg-navy-950 border border-navy-700 rounded text-sm text-white placeholder-navy-500 focus:border-gold-500 focus:ring-0 focus:outline-none">
+                                    </div>
+                                    <div class="max-h-64 overflow-y-auto">
+                                        <template x-for="(opt, idx) in filteredItems" :key="opt.id">
+                                            <div @click="select(opt)" @mouseenter="highlighted = idx"
+                                                 :data-option-index="idx"
+                                                 class="px-3 py-2 text-sm cursor-pointer"
+                                                 :class="highlighted === idx ? 'bg-gold-500 text-navy-900' : 'text-white hover:bg-navy-700'"
+                                                 x-text="opt.label"></div>
+                                        </template>
+                                        <template x-if="filteredItems.length === 0">
+                                            <div class="px-3 py-4 text-center text-sm text-navy-500">Tidak ada hasil</div>
+                                        </template>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+
+                    {{-- DARI LOKASI --}}
+                    <div>
+                        <label class="block text-xs font-semibold text-navy-300 uppercase tracking-wider mb-2">
+                            Dari Lokasi <span class="text-red-400">*</span>
+                        </label>
+                        <div x-data="searchable({
+                            items: @js($locationOptions),
+                            selected: '{{ old('from_location_id') }}',
+                            name: 'from_location_id'
+                        })" class="relative">
+                            <input type="hidden" name="from_location_id" :value="selected" required>
+
+                            <div x-ref="trigger" @click="toggle()"
+                                 class="w-full px-3 py-2.5 bg-navy-950 border border-navy-700 rounded-lg text-sm text-white cursor-pointer flex items-center justify-between"
+                                 :class="open && 'border-gold-500 ring-2 ring-gold-500/20'">
+                                <span x-show="selectedLabel" x-text="selectedLabel" class="truncate"></span>
+                                <span x-show="!selectedLabel" class="text-navy-500">-- Pilih Lokasi Asal --</span>
+                                <svg class="w-4 h-4 text-navy-500 flex-shrink-0" :class="open && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                </svg>
+                            </div>
+
+                            <template x-teleport="body">
+                                <div x-show="open" x-cloak :style="dropdownStyle"
+                                     class="bg-navy-800 border border-navy-700 rounded-lg shadow-xl overflow-hidden"
+                                     @click.away="open = false">
+                                    <div class="p-2 border-b border-navy-700">
+                                        <input type="text" x-model="search" :data-search-input="name"
+                                               @keydown.arrow-down.prevent="highlightNext()"
+                                               @keydown.arrow-up.prevent="highlightPrev()"
+                                               @keydown.enter.prevent="selectHighlighted()"
+                                               @keydown.escape="open = false"
+                                               placeholder="Cari lokasi..."
+                                               class="w-full px-3 py-2 bg-navy-950 border border-navy-700 rounded text-sm text-white placeholder-navy-500 focus:border-gold-500 focus:ring-0 focus:outline-none">
+                                    </div>
+                                    <div class="max-h-64 overflow-y-auto">
+                                        <template x-for="(opt, idx) in filteredItems" :key="opt.id">
+                                            <div @click="select(opt)" @mouseenter="highlighted = idx"
+                                                 :data-option-index="idx"
+                                                 class="px-3 py-2 text-sm cursor-pointer"
+                                                 :class="highlighted === idx ? 'bg-gold-500 text-navy-900' : 'text-white hover:bg-navy-700'"
+                                                 x-text="opt.label"></div>
+                                        </template>
+                                        <template x-if="filteredItems.length === 0">
+                                            <div class="px-3 py-4 text-center text-sm text-navy-500">Tidak ada hasil</div>
+                                        </template>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+
+                    {{-- KE LOKASI --}}
+                    <div>
+                        <label class="block text-xs font-semibold text-navy-300 uppercase tracking-wider mb-2">
+                            Ke Lokasi <span class="text-red-400">*</span>
+                        </label>
+                        <div x-data="searchable({
+                            items: @js($locationOptions),
+                            selected: '{{ old('to_location_id') }}',
+                            name: 'to_location_id'
+                        })" class="relative">
+                            <input type="hidden" name="to_location_id" :value="selected" required>
+
+                            <div x-ref="trigger" @click="toggle()"
+                                 class="w-full px-3 py-2.5 bg-navy-950 border border-navy-700 rounded-lg text-sm text-white cursor-pointer flex items-center justify-between"
+                                 :class="open && 'border-gold-500 ring-2 ring-gold-500/20'">
+                                <span x-show="selectedLabel" x-text="selectedLabel" class="truncate"></span>
+                                <span x-show="!selectedLabel" class="text-navy-500">-- Pilih Lokasi Tujuan --</span>
+                                <svg class="w-4 h-4 text-navy-500 flex-shrink-0" :class="open && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                </svg>
+                            </div>
+
+                            <template x-teleport="body">
+                                <div x-show="open" x-cloak :style="dropdownStyle"
+                                     class="bg-navy-800 border border-navy-700 rounded-lg shadow-xl overflow-hidden"
+                                     @click.away="open = false">
+                                    <div class="p-2 border-b border-navy-700">
+                                        <input type="text" x-model="search" :data-search-input="name"
+                                               @keydown.arrow-down.prevent="highlightNext()"
+                                               @keydown.arrow-up.prevent="highlightPrev()"
+                                               @keydown.enter.prevent="selectHighlighted()"
+                                               @keydown.escape="open = false"
+                                               placeholder="Cari lokasi..."
+                                               class="w-full px-3 py-2 bg-navy-950 border border-navy-700 rounded text-sm text-white placeholder-navy-500 focus:border-gold-500 focus:ring-0 focus:outline-none">
+                                    </div>
+                                    <div class="max-h-64 overflow-y-auto">
+                                        <template x-for="(opt, idx) in filteredItems" :key="opt.id">
+                                            <div @click="select(opt)" @mouseenter="highlighted = idx"
+                                                 :data-option-index="idx"
+                                                 class="px-3 py-2 text-sm cursor-pointer"
+                                                 :class="highlighted === idx ? 'bg-gold-500 text-navy-900' : 'text-white hover:bg-navy-700'"
+                                                 x-text="opt.label"></div>
+                                        </template>
+                                        <template x-if="filteredItems.length === 0">
+                                            <div class="px-3 py-4 text-center text-sm text-navy-500">Tidak ada hasil</div>
+                                        </template>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+
+                    <x-atelier.input name="qty" label="Qty" type="number" step="0.01" :value="old('qty')" required />
+
+                    <div class="md:col-span-2">
+                        <label class="block text-xs font-semibold text-navy-300 uppercase tracking-wider mb-2">Catatan</label>
+                        <textarea name="notes" rows="2" placeholder="Catatan..." class="w-full px-3 py-2.5 bg-navy-950 border border-navy-700 rounded-lg text-sm text-white placeholder-navy-500 focus:border-gold-500 focus:ring-2 focus:ring-gold-500/20 focus:outline-none transition">{{ old('notes') }}</textarea>
+                    </div>
+                </div>
+            </x-atelier.card>
+
+            <div class="flex items-center justify-end gap-3">
+                <x-atelier.button :href="route('warehouse.stock-movements.index')" variant="ghost">Batal</x-atelier.button>
+                <x-atelier.button type="submit" variant="primary">Proses Transfer</x-atelier.button>
+            </div>
+
+        </form>
+
+    </div>
+
+    @push('scripts')
+    <script>
+        function searchable({ items, selected, name, onChange = null }) {
+            return {
+                items: items,
+                selected: selected || '',
+                search: '',
+                open: false,
+                highlighted: 0,
+                name: name,
+                onChange: onChange,
+                dropdownStyle: '',
+
+                get filteredItems() {
+                    if (!this.search) return this.items;
+                    const q = this.search.toLowerCase();
+                    return this.items.filter(i => i.label.toLowerCase().includes(q));
+                },
+
+                get selectedLabel() {
+                    const item = this.items.find(i => i.id === this.selected);
+                    return item ? item.label : '';
+                },
+
+                toggle() {
+                    this.open = !this.open;
+                    if (this.open) {
+                        this.search = '';
+                        this.highlighted = 0;
+                        this.$nextTick(() => {
+                            this.updatePosition();
+                            setTimeout(() => {
+                                const input = document.querySelector(`[data-search-input="${this.name}"]`);
+                                if (input) input.focus();
+                            }, 10);
+                        });
+                    }
+                },
+
+                updatePosition() {
+                    const trigger = this.$refs.trigger;
+                    if (!trigger) return;
+                    const rect = trigger.getBoundingClientRect();
+                    const dropdownHeight = 320;
+                    const spaceBelow = window.innerHeight - rect.bottom;
+                    const spaceAbove = rect.top;
+
+                    let top, maxHeight;
+
+                    if (spaceBelow >= dropdownHeight || spaceBelow >= spaceAbove) {
+                        top = rect.bottom + 4;
+                        maxHeight = Math.min(dropdownHeight, spaceBelow - 20);
+                    } else {
+                        maxHeight = Math.min(dropdownHeight, spaceAbove - 20);
+                        top = rect.top - maxHeight - 4;
+                    }
+
+                    this.dropdownStyle = `
+                        position: fixed;
+                        top: ${top}px;
+                        left: ${rect.left}px;
+                        width: ${rect.width}px;
+                        z-index: 9999;
+                    `;
+                },
+
+                select(opt) {
+                    this.selected = opt.id;
+                    this.open = false;
+                    if (this.onChange) this.onChange(opt.id, opt.data || {});
+                },
+
+                highlightNext() {
+                    if (this.highlighted < this.filteredItems.length - 1) this.highlighted++;
+                    this.scrollToHighlighted();
+                },
+                highlightPrev() {
+                    if (this.highlighted > 0) this.highlighted--;
+                    this.scrollToHighlighted();
+                },
+                scrollToHighlighted() {
+                    this.$nextTick(() => {
+                        const el = document.querySelector(`[data-option-index="${this.highlighted}"]`);
+                        if (el) el.scrollIntoView({ block: 'nearest' });
+                    });
+                },
+                selectHighlighted() {
+                    if (this.filteredItems[this.highlighted]) {
+                        this.select(this.filteredItems[this.highlighted]);
+                    }
+                },
+            }
+        }
+
+        function transferForm() {
+            return {
+                selectedItemType: '{{ old('item_type', 'material') }}',
+                selectedItemId: '{{ old('item_id') }}',
+            }
+        }
+    </script>
+    @endpush
+
+</x-app-layout>
+
+
+=== FILE: resources\views\warehouse\warehouses\create.blade.php ===
+
+<x-app-layout>
+    <x-slot name="header">
+        <h2 class="font-serif text-2xl font-bold text-white">Tambah Warehouse</h2>
+    </x-slot>
+
+    <div class="p-6 lg:p-8 space-y-6 grid-bg">
+
+        <x-atelier.page-header segment="M4A" title="Tambah Warehouse" subtitle="Isi data gudang baru" />
+
+        @if($errors->any())
+            <div class="bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 rounded-lg text-sm">
+                <p class="font-semibold mb-1">Ada kesalahan:</p>
+                <ul class="list-disc list-inside space-y-0.5">
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
+        <form method="POST" action="{{ route('warehouse.warehouses.store') }}">
+            @csrf
+
+            <x-atelier.card title="Informasi Warehouse" :brackets="true">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <x-atelier.input name="kode" label="Kode Warehouse" :value="$generatedKode" required hint="Kode otomatis, bisa diubah" />
+                    <x-atelier.input name="nama" label="Nama Warehouse" placeholder="Gudang Utama" required />
+
+                    <div>
+                        <label class="block text-xs font-semibold text-navy-300 uppercase tracking-wider mb-2">
+                            Type <span class="text-red-400">*</span>
+                        </label>
+                        <select name="type" required class="w-full px-3 py-2.5 bg-navy-950 border border-navy-700 rounded-lg text-sm text-white focus:border-gold-500 focus:ring-2 focus:ring-gold-500/20 focus:outline-none transition">
+                            <option value="">-- Pilih Type --</option>
+                            <option value="Raw Material" @selected(old('type') == 'Raw Material')>Raw Material</option>
+                            <option value="WIP" @selected(old('type') == 'WIP')>WIP (Work In Progress)</option>
+                            <option value="Finished Goods" @selected(old('type') == 'Finished Goods')>Finished Goods</option>
+                        </select>
+                    </div>
+
+                    <x-atelier.input name="pic_name" label="PIC (Penanggung Jawab)" placeholder="Budi Santoso" />
+                    <x-atelier.input name="phone" label="Telepon" placeholder="0812-xxxx-xxxx" />
+
+                    <div class="md:col-span-2">
+                        <label class="block text-xs font-semibold text-navy-300 uppercase tracking-wider mb-2">Alamat</label>
+                        <textarea name="address" rows="2" placeholder="Alamat gudang..." class="w-full px-3 py-2.5 bg-navy-950 border border-navy-700 rounded-lg text-sm text-white placeholder-navy-500 focus:border-gold-500 focus:ring-2 focus:ring-gold-500/20 focus:outline-none transition">{{ old('address') }}</textarea>
+                    </div>
+                </div>
+            </x-atelier.card>
+
+            <x-atelier.card :brackets="true">
+                <div class="flex items-center gap-3">
+                    <input type="hidden" name="is_active" value="0">
+                    <input type="checkbox" name="is_active" id="is_active" value="1" checked class="rounded border-navy-600 bg-navy-950 text-gold-500 focus:ring-gold-500">
+                    <label for="is_active" class="text-sm text-navy-300">Warehouse Aktif</label>
+                </div>
+
+                <div class="mt-5">
+                    <label class="block text-xs font-semibold text-navy-300 uppercase tracking-wider mb-2">Catatan</label>
+                    <textarea name="notes" rows="2" placeholder="Catatan tambahan..." class="w-full px-3 py-2.5 bg-navy-950 border border-navy-700 rounded-lg text-sm text-white placeholder-navy-500 focus:border-gold-500 focus:ring-2 focus:ring-gold-500/20 focus:outline-none transition">{{ old('notes') }}</textarea>
+                </div>
+
+                <div class="flex items-center justify-end gap-3 mt-6 pt-6 border-t border-navy-800">
+                    <x-atelier.button :href="route('warehouse.warehouses.index')" variant="ghost">Batal</x-atelier.button>
+                    <x-atelier.button type="submit" variant="primary">Simpan Warehouse</x-atelier.button>
+                </div>
+            </x-atelier.card>
+
+        </form>
+
+    </div>
+</x-app-layout>
+
+
+=== FILE: resources\views\warehouse\warehouses\edit.blade.php ===
+
+<x-app-layout>
+    <x-slot name="header">
+        <h2 class="font-serif text-2xl font-bold text-white">Edit Warehouse</h2>
+    </x-slot>
+
+    <div class="p-6 lg:p-8 space-y-6 grid-bg">
+
+        <x-atelier.page-header segment="M4A" title="Edit Warehouse" subtitle="{{ $item->kode }} â€” {{ $item->nama }}" />
+
+        @if($errors->any())
+            <div class="bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 rounded-lg text-sm">
+                <p class="font-semibold mb-1">Ada kesalahan:</p>
+                <ul class="list-disc list-inside space-y-0.5">
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
+        <form method="POST" action="{{ route('warehouse.warehouses.update', $item) }}">
+            @csrf
+            @method('PUT')
+
+            <x-atelier.card title="Informasi Warehouse" :brackets="true">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <x-atelier.input name="kode" label="Kode Warehouse" :value="$item->kode" required />
+                    <x-atelier.input name="nama" label="Nama Warehouse" :value="$item->nama" required />
+
+                    <div>
+                        <label class="block text-xs font-semibold text-navy-300 uppercase tracking-wider mb-2">
+                            Type <span class="text-red-400">*</span>
+                        </label>
+                        <select name="type" required class="w-full px-3 py-2.5 bg-navy-950 border border-navy-700 rounded-lg text-sm text-white focus:border-gold-500 focus:ring-2 focus:ring-gold-500/20 focus:outline-none transition">
+                            @foreach(['Raw Material', 'WIP', 'Finished Goods'] as $type)
+                                <option value="{{ $type }}" @selected(old('type', $item->type) == $type)>{{ $type }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <x-atelier.input name="pic_name" label="PIC (Penanggung Jawab)" :value="$item->pic_name" />
+                    <x-atelier.input name="phone" label="Telepon" :value="$item->phone" />
+
+                    <div class="md:col-span-2">
+                        <label class="block text-xs font-semibold text-navy-300 uppercase tracking-wider mb-2">Alamat</label>
+                        <textarea name="address" rows="2" class="w-full px-3 py-2.5 bg-navy-950 border border-navy-700 rounded-lg text-sm text-white placeholder-navy-500 focus:border-gold-500 focus:ring-2 focus:ring-gold-500/20 focus:outline-none transition">{{ old('address', $item->address) }}</textarea>
+                    </div>
+                </div>
+            </x-atelier.card>
+
+            <x-atelier.card :brackets="true">
+                <div class="flex items-center gap-3">
+                    <input type="hidden" name="is_active" value="0">
+                    <input type="checkbox" name="is_active" id="is_active" value="1" {{ $item->is_active ? 'checked' : '' }} class="rounded border-navy-600 bg-navy-950 text-gold-500 focus:ring-gold-500">
+                    <label for="is_active" class="text-sm text-navy-300">Warehouse Aktif</label>
+                </div>
+
+                <div class="mt-5">
+                    <label class="block text-xs font-semibold text-navy-300 uppercase tracking-wider mb-2">Catatan</label>
+                    <textarea name="notes" rows="2" class="w-full px-3 py-2.5 bg-navy-950 border border-navy-700 rounded-lg text-sm text-white placeholder-navy-500 focus:border-gold-500 focus:ring-2 focus:ring-gold-500/20 focus:outline-none transition">{{ old('notes', $item->notes) }}</textarea>
+                </div>
+
+                <div class="flex items-center justify-end gap-3 mt-6 pt-6 border-t border-navy-800">
+                    <x-atelier.button :href="route('warehouse.warehouses.index')" variant="ghost">Batal</x-atelier.button>
+                    <x-atelier.button type="submit" variant="primary">Simpan Perubahan</x-atelier.button>
+                </div>
+            </x-atelier.card>
+
+        </form>
+
+    </div>
+</x-app-layout>
+
+
+=== FILE: resources\views\warehouse\warehouses\index.blade.php ===
+
+<x-app-layout>
+    <x-slot name="header">
+        <h2 class="font-serif text-2xl font-bold text-white">Warehouse</h2>
+    </x-slot>
+
+    <div class="p-6 lg:p-8 space-y-6 grid-bg">
+
+        <x-atelier.page-header
+            segment="M4A"
+            title="Warehouse"
+            subtitle="Daftar semua gudang"
+            action="Tambah Warehouse"
+            :actionUrl="route('warehouse.warehouses.create')"
+        />
+
+        @if(session('success'))
+            <div class="bg-green-500/10 border border-green-500/30 text-green-400 px-4 py-3 rounded-lg text-sm">
+                {{ session('success') }}
+            </div>
+        @endif
+
+        <x-atelier.card :brackets="true" padding="p-0">
+            <div class="px-5 py-4 border-b border-navy-800">
+                <form method="GET" action="{{ route('warehouse.warehouses.index') }}" class="flex gap-3">
+                    <input
+                        type="text"
+                        name="search"
+                        value="{{ request('search') }}"
+                        placeholder="Cari kode, nama, PIC..."
+                        class="flex-1 px-3 py-2 bg-navy-950 border border-navy-700 rounded-lg text-sm text-white placeholder-navy-500 focus:border-gold-500 focus:ring-2 focus:ring-gold-500/20 focus:outline-none transition"
+                    >
+                    <x-atelier.button type="submit" variant="secondary">Cari</x-atelier.button>
+                    @if(request('search'))
+                        <x-atelier.button :href="route('warehouse.warehouses.index')" variant="ghost">Reset</x-atelier.button>
+                    @endif
+                </form>
+            </div>
+
+            @if($items->count() > 0)
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-navy-950/50 border-b border-navy-800">
+                            <tr>
+                                <th class="px-5 py-3 text-left text-[10px] font-mono font-semibold text-navy-400 uppercase tracking-widest">Kode</th>
+                                <th class="px-5 py-3 text-left text-[10px] font-mono font-semibold text-navy-400 uppercase tracking-widest">Nama</th>
+                                <th class="px-5 py-3 text-left text-[10px] font-mono font-semibold text-navy-400 uppercase tracking-widest">Type</th>
+                                <th class="px-5 py-3 text-left text-[10px] font-mono font-semibold text-navy-400 uppercase tracking-widest">PIC</th>
+                                <th class="px-5 py-3 text-left text-[10px] font-mono font-semibold text-navy-400 uppercase tracking-widest">Status</th>
+                                <th class="px-5 py-3 text-right text-[10px] font-mono font-semibold text-navy-400 uppercase tracking-widest">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-navy-800">
+                            @foreach($items as $warehouse)
+                                <tr class="hover:bg-navy-800/30 transition">
+                                    <td class="px-5 py-3 text-sm font-mono text-gold-500">{{ $warehouse->kode }}</td>
+                                    <td class="px-5 py-3 text-sm text-white font-medium">{{ $warehouse->nama }}</td>
+                                    <td class="px-5 py-3">
+                                        <span class="inline-flex items-center text-xs px-2 py-0.5 rounded-full border {{ $warehouse->type_color }}">
+                                            {{ $warehouse->type }}
+                                        </span>
+                                    </td>
+                                    <td class="px-5 py-3 text-sm text-navy-300">
+                                        {{ $warehouse->pic_name ?? '-' }}
+                                        @if($warehouse->phone)
+                                            <br><span class="text-xs text-navy-500">{{ $warehouse->phone }}</span>
+                                        @endif
+                                    </td>
+                                    <td class="px-5 py-3">
+                                        @if($warehouse->is_active)
+                                            <span class="inline-flex items-center gap-1.5 text-xs text-green-400">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-green-400"></span>Aktif
+                                            </span>
+                                        @else
+                                            <span class="inline-flex items-center gap-1.5 text-xs text-navy-500">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-navy-500"></span>Nonaktif
+                                            </span>
+                                        @endif
+                                    </td>
+                                    <td class="px-5 py-3 text-right">
+                                        <div class="flex items-center justify-end gap-2">
+                                            <x-atelier.button :href="route('warehouse.warehouses.show', $warehouse)" variant="ghost" size="sm">Lihat</x-atelier.button>
+                                            <x-atelier.button :href="route('warehouse.warehouses.edit', $warehouse)" variant="secondary" size="sm">Edit</x-atelier.button>
+                                            <form method="POST" action="{{ route('warehouse.warehouses.destroy', $warehouse) }}" onsubmit="return confirm('Yakin hapus warehouse ini?')" class="inline">
+                                                @csrf
+                                                @method('DELETE')
+                                                <x-atelier.button type="submit" variant="danger" size="sm">Hapus</x-atelier.button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+
+                @if($items->hasPages())
+                    <div class="px-5 py-4 border-t border-navy-800">
+                        {{ $items->links() }}
+                    </div>
+                @endif
+            @else
+                <x-atelier.empty-state
+                    title="Belum ada warehouse"
+                    subtitle="Mulai dengan menambahkan warehouse pertama."
+                    action="Tambah Warehouse"
+                    :actionUrl="route('warehouse.warehouses.create')"
+                />
+            @endif
+        </x-atelier.card>
+
+    </div>
+</x-app-layout>
+
+
+=== FILE: resources\views\warehouse\warehouses\show.blade.php ===
+
+<x-app-layout>
+    <x-slot name="header">
+        <h2 class="font-serif text-2xl font-bold text-white">Detail Warehouse</h2>
+    </x-slot>
+
+    <div class="p-6 lg:p-8 space-y-6 grid-bg">
+
+        <x-atelier.page-header
+            segment="M4A"
+            title="{{ $item->nama }}"
+            subtitle="Kode: {{ $item->kode }}"
+            action="Edit"
+            :actionUrl="route('warehouse.warehouses.edit', $item)"
+        />
+
+        <x-atelier.card title="Informasi Warehouse" :brackets="true">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <p class="text-[10px] font-mono text-navy-500 uppercase tracking-widest mb-1">Kode</p>
+                    <p class="text-sm text-gold-500 font-mono">{{ $item->kode }}</p>
+                </div>
+                <div>
+                    <p class="text-[10px] font-mono text-navy-500 uppercase tracking-widest mb-1">Nama</p>
+                    <p class="text-sm text-white font-medium">{{ $item->nama }}</p>
+                </div>
+                <div>
+                    <p class="text-[10px] font-mono text-navy-500 uppercase tracking-widest mb-1">Type</p>
+                    <span class="inline-flex items-center text-xs px-2 py-0.5 rounded-full border {{ $item->type_color }}">
+                        {{ $item->type }}
+                    </span>
+                </div>
+                <div>
+                    <p class="text-[10px] font-mono text-navy-500 uppercase tracking-widest mb-1">Status</p>
+                    @if($item->is_active)
+                        <span class="inline-flex items-center gap-1.5 text-xs text-green-400">
+                            <span class="w-1.5 h-1.5 rounded-full bg-green-400"></span>Aktif
+                        </span>
+                    @else
+                        <span class="inline-flex items-center gap-1.5 text-xs text-navy-500">
+                            <span class="w-1.5 h-1.5 rounded-full bg-navy-500"></span>Nonaktif
+                        </span>
+                    @endif
+                </div>
+                <div>
+                    <p class="text-[10px] font-mono text-navy-500 uppercase tracking-widest mb-1">PIC</p>
+                    <p class="text-sm text-navy-300">{{ $item->pic_name ?? '-' }}</p>
+                </div>
+                <div>
+                    <p class="text-[10px] font-mono text-navy-500 uppercase tracking-widest mb-1">Telepon</p>
+                    <p class="text-sm text-navy-300">{{ $item->phone ?? '-' }}</p>
+                </div>
+                @if($item->address)
+                    <div class="md:col-span-2">
+                        <p class="text-[10px] font-mono text-navy-500 uppercase tracking-widest mb-1">Alamat</p>
+                        <p class="text-sm text-navy-300">{{ $item->address }}</p>
+                    </div>
+                @endif
+                @if($item->notes)
+                    <div class="md:col-span-2">
+                        <p class="text-[10px] font-mono text-navy-500 uppercase tracking-widest mb-1">Catatan</p>
+                        <p class="text-sm text-navy-300">{{ $item->notes }}</p>
+                    </div>
+                @endif
+            </div>
+        </x-atelier.card>
+
+        {{-- Placeholder untuk Location --}}
+        <x-atelier.card title="Lokasi / Rak" subtitle="Akan tersedia setelah modul Location selesai" :brackets="true">
+            <div class="p-8 text-center border border-dashed border-navy-700 rounded-lg">
+                <p class="text-sm text-navy-400">Belum ada lokasi. Akan dibuat di M4A bagian berikutnya.</p>
+            </div>
+        </x-atelier.card>
+
+        <div class="flex items-center justify-between gap-3">
+            <x-atelier.button :href="route('warehouse.warehouses.index')" variant="ghost">Kembali</x-atelier.button>
+            <form method="POST" action="{{ route('warehouse.warehouses.destroy', $item) }}" onsubmit="return confirm('Yakin hapus warehouse ini?')">
+                @csrf
+                @method('DELETE')
+                <x-atelier.button type="submit" variant="danger">Hapus Warehouse</x-atelier.button>
+            </form>
+        </div>
+
+    </div>
+</x-app-layout>

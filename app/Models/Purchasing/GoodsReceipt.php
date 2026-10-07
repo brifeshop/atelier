@@ -92,4 +92,9 @@ class GoodsReceipt extends Model
     {
         return $this->status === 'draft' && $this->items->count() > 0;
     }
+
+    public function purchaseReturns()
+    {
+        return $this->hasMany(PurchaseReturn::class);
+    }
 }

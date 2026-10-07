@@ -16,7 +16,9 @@ class WorkCenter extends Model
         'nama',
         'description',
         'hourly_rate',
+        'overhead_rate',
         'capacity_per_hour',
+        'setup_time_default',
         'location',
         'notes',
         'is_active',
@@ -25,7 +27,9 @@ class WorkCenter extends Model
     protected $casts = [
         'is_active' => 'boolean',
         'hourly_rate' => 'decimal:2',
+        'overhead_rate'       => 'decimal:2',
         'capacity_per_hour' => 'decimal:2',
+        'setup_time_default'  => 'decimal:2',
     ];
 
     /**
@@ -36,6 +40,23 @@ class WorkCenter extends Model
         $last = self::orderBy('id', 'desc')->first();
         $lastNumber = $last ? (int) substr($last->kode, -4) : 0;
         return 'WC-' . str_pad($lastNumber + 1, 4, '0', STR_PAD_LEFT);
+    }
+
+    public function routingSteps()
+    {
+        return $this->hasMany(\App\Models\Engineering\RoutingStep::class);
+    }
+
+    // Total rate per jam (labor + overhead)
+    public function getTotalRatePerHourAttribute(): float
+    {
+        return (float) $this->hourly_rate + (float) $this->overhead_rate;
+    }
+
+    // Label lengkap
+    public function getFullNameAttribute(): string
+    {
+        return $this->kode . ' — ' . $this->nama;
     }
 
     /**

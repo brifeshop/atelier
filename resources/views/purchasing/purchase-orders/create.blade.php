@@ -366,9 +366,32 @@
                     });
                 },
                 removeItem(index) { this.items.splice(index, 1); },
-                setMaterial(index, materialId, data) {
+                async setMaterial(index, materialId, data) {
                     this.items[index].material_id = materialId;
-                    if (data && data.price) this.items[index].unit_price = data.price;
+                    
+                    // Ambil supplier yang dipilih
+                    const supplierId = document.querySelector('input[name="supplier_id"]')?.value;
+                    
+                    if (supplierId && materialId) {
+                        try {
+                            const response = await fetch(`/purchasing/api/supplier-price?supplier_id=${supplierId}&material_id=${materialId}`);
+                            const result = await response.json();
+                            
+                            if (result.price) {
+                                this.items[index].unit_price = result.price;
+                            } else if (data && data.price) {
+                                this.items[index].unit_price = data.price;
+                            }
+                        } catch (error) {
+                            // Fallback ke harga material
+                            if (data && data.price) {
+                                this.items[index].unit_price = data.price;
+                            }
+                        }
+                    } else if (data && data.price) {
+                        this.items[index].unit_price = data.price;
+                    }
+                    
                     this.calculateItem(index);
                 },
                 calculateItem(index) {

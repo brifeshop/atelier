@@ -16,10 +16,20 @@ use App\Http\Controllers\Warehouse\WarehouseController;
 use App\Http\Controllers\Warehouse\LocationController;
 use App\Http\Controllers\Warehouse\InventoryController;
 use App\Http\Controllers\Warehouse\StockMovementController;
+use App\Http\Controllers\Warehouse\StockOpnameController;
+use App\Http\Controllers\Warehouse\StockCardController;
+use App\Http\Controllers\Warehouse\LowStockController;
 
 use App\Http\Controllers\Purchasing\PurchaseRequisitionController;
 use App\Http\Controllers\Purchasing\PurchaseOrderController;
 use App\Http\Controllers\Purchasing\GoodsReceiptController;
+use App\Http\Controllers\Purchasing\SupplierPriceController;
+use App\Http\Controllers\Purchasing\PurchaseReturnController;
+use App\Http\Controllers\Purchasing\PurchasingDashboardController;
+use App\Http\Controllers\Purchasing\SupplierEvaluationController;
+
+use App\Http\Controllers\Engineering\BomController;
+use App\Http\Controllers\Engineering\RoutingController;
 
 use Illuminate\Support\Facades\Route;
 
@@ -38,95 +48,129 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-Route::middleware(['auth', 'verified'])->prefix('master')->name('master.')->group(function () {
-    Route::resource('customers', CustomerController::class);
-});
-
-Route::middleware(['auth', 'verified'])->prefix('master')->name('master.')->group(function () {
-    Route::resource('customers', CustomerController::class);
-    Route::resource('suppliers', SupplierController::class);
-});
-
-Route::middleware(['auth', 'verified'])->prefix('master')->name('master.')->group(function () {
-    Route::resource('customers', CustomerController::class);
-    Route::resource('suppliers', SupplierController::class);
-    Route::resource('employees', EmployeeController::class);
-});
-
-Route::middleware(['auth', 'verified'])->prefix('master')->name('master.')->group(function () {
-    Route::resource('customers', CustomerController::class);
-    Route::resource('suppliers', SupplierController::class);
-    Route::resource('employees', EmployeeController::class);
-    Route::resource('machines', MachineController::class);
-});
-
+// ==================== MASTER DATA ====================
 Route::middleware(['auth', 'verified'])->prefix('master')->name('master.')->group(function () {
     Route::resource('customers', CustomerController::class);
     Route::resource('suppliers', SupplierController::class);
     Route::resource('employees', EmployeeController::class);
     Route::resource('machines', MachineController::class);
     Route::resource('materials', MaterialController::class);
-    Route::resource('products', ProductController::class); 
+    Route::resource('products', ProductController::class);
     Route::resource('work-centers', WorkCenterController::class);
 });
 
+// ==================== SALES ====================
 Route::middleware(['auth', 'verified'])->prefix('sales')->name('sales.')->group(function () {
     Route::resource('sales-orders', SalesOrderController::class);
     Route::patch('sales-orders/{sales_order}/status', [SalesOrderController::class, 'updateStatus'])
         ->name('sales-orders.update-status');
 });
 
-Route::middleware(['auth', 'verified'])->prefix('warehouse')->name('warehouse.')->group(function () {
-    Route::resource('warehouses', WarehouseController::class);
-});
-
-Route::middleware(['auth', 'verified'])->prefix('warehouse')->name('warehouse.')->group(function () {
-    Route::resource('warehouses', WarehouseController::class);
-    Route::resource('locations', LocationController::class);   // ← TAMBAHKAN
-});
-
+// ==================== WAREHOUSE ====================
 Route::middleware(['auth', 'verified'])->prefix('warehouse')->name('warehouse.')->group(function () {
     Route::resource('warehouses', WarehouseController::class);
     Route::resource('locations', LocationController::class);
     Route::resource('inventories', InventoryController::class)->only(['index', 'show', 'update']);
-});
-
-Route::middleware(['auth', 'verified'])->prefix('warehouse')->name('warehouse.')->group(function () {
-    Route::resource('warehouses', WarehouseController::class);
-    Route::resource('locations', LocationController::class);
-    Route::resource('inventories', InventoryController::class)->only(['index', 'show', 'update']);
+    Route::get('stock-movements/adjustments', [StockMovementController::class, 'adjustments'])
+    ->name('stock-movements.adjustments');
+    Route::get('stock-movements/get-stock', [StockMovementController::class, 'getStock'])
+        ->name('stock-movements.get-stock');
+    Route::get('stock-movements/get-locations', [StockMovementController::class, 'getLocations'])
+        ->name('stock-movements.get-locations');
     Route::resource('stock-movements', StockMovementController::class)->only(['index', 'create', 'store', 'show']);
     Route::get('stock-movements/transfer/create', [StockMovementController::class, 'createTransfer'])
         ->name('stock-movements.transfer.create');
     Route::post('stock-movements/transfer', [StockMovementController::class, 'storeTransfer'])
         ->name('stock-movements.transfer.store');
+        Route::resource('stock-opnames', StockOpnameController::class);
+    Route::patch('stock-opnames/{stock_opname}/approve', [StockOpnameController::class, 'approve'])
+        ->name('stock-opnames.approve');
+    Route::patch('stock-opnames/{stock_opname}/cancel', [StockOpnameController::class, 'cancel'])
+        ->name('stock-opnames.cancel');
+    Route::patch('stock-opnames/{stock_opname}/items/{item}', [StockOpnameController::class, 'updateItem'])
+        ->name('stock-opnames.items.update');
+    Route::get('stock-cards', [StockCardController::class, 'index'])->name('stock-cards.index');
+    Route::get('low-stocks', [LowStockController::class, 'index'])->name('low-stocks.index');
 });
 
+// ==================== PURCHASING ====================
 Route::middleware(['auth', 'verified'])->prefix('purchasing')->name('purchasing.')->group(function () {
+    // Dashboard
+    Route::get('dashboard', [PurchasingDashboardController::class, 'index'])
+        ->name('dashboard');
+
+    // Purchase Requisition
     Route::resource('purchase-requisitions', PurchaseRequisitionController::class);
     Route::patch('purchase-requisitions/{purchase_requisition}/approve', [PurchaseRequisitionController::class, 'approve'])
         ->name('purchase-requisitions.approve');
     Route::patch('purchase-requisitions/{purchase_requisition}/reject', [PurchaseRequisitionController::class, 'reject'])
         ->name('purchase-requisitions.reject');
-});
 
-Route::middleware(['auth', 'verified'])->prefix('purchasing')->name('purchasing.')->group(function () {
-    Route::resource('purchase-requisitions', PurchaseRequisitionController::class);
-    Route::patch('purchase-requisitions/{purchase_requisition}/approve', [PurchaseRequisitionController::class, 'approve'])
-        ->name('purchase-requisitions.approve');
-    Route::patch('purchase-requisitions/{purchase_requisition}/reject', [PurchaseRequisitionController::class, 'reject'])
-        ->name('purchase-requisitions.reject');
-
+    // Purchase Order
     Route::resource('purchase-orders', PurchaseOrderController::class);
     Route::patch('purchase-orders/{purchase_order}/send', [PurchaseOrderController::class, 'send'])
         ->name('purchase-orders.send');
     Route::patch('purchase-orders/{purchase_order}/cancel', [PurchaseOrderController::class, 'cancel'])
         ->name('purchase-orders.cancel');
 
+    // Goods Receipt
     Route::resource('goods-receipts', GoodsReceiptController::class);
     Route::patch('goods-receipts/{goods_receipt}/receive', [GoodsReceiptController::class, 'receive'])
         ->name('goods-receipts.receive');
 
+    // Purchase Return
+    Route::resource('purchase-returns', PurchaseReturnController::class);
+    Route::patch('purchase-returns/{purchase_return}/complete', [PurchaseReturnController::class, 'complete'])
+        ->name('purchase-returns.complete');
+
+    // Supplier Price
+    Route::resource('supplier-prices', SupplierPriceController::class)->except(['show']);
+    Route::get('supplier-prices-compare', [SupplierPriceController::class, 'compare'])
+        ->name('supplier-prices.compare');
+    Route::get('api/supplier-price', [SupplierPriceController::class, 'getPrice'])
+        ->name('api.supplier-price');
+    Route::resource('supplier-evaluations', SupplierEvaluationController::class);
 });
 
+Route::middleware(['auth'])->group(function () {
+    Route::patch('notifications/read-all', function () {
+        auth()->user()->unreadNotifications->markAsRead();
+        return back();
+    })->name('notifications.read-all');
+});
+
+
+// ==================== ENGINEERING ====================
+Route::middleware(['auth', 'verified'])->prefix('engineering')->name('engineering.')->group(function () {
+    
+    // BOM
+    Route::resource('boms', BomController::class);
+    Route::patch('boms/{bom}/activate', [BomController::class, 'activate'])
+        ->name('boms.activate');
+    Route::patch('boms/{bom}/obsolete', [BomController::class, 'obsolete'])
+        ->name('boms.obsolete');
+    Route::post('boms/{bom}/recalculate', [BomController::class, 'recalculate'])
+        ->name('boms.recalculate');
+    Route::post('boms/{bom}/items', [BomController::class, 'addItem'])
+        ->name('boms.items.store');
+    Route::patch('boms/{bom}/items/{item}', [BomController::class, 'updateItem'])
+        ->name('boms.items.update');
+    Route::delete('boms/{bom}/items/{item}', [BomController::class, 'removeItem'])
+        ->name('boms.items.destroy');
+
+    // Routing
+    Route::resource('routings', RoutingController::class);
+    Route::patch('routings/{routing}/activate', [RoutingController::class, 'activate'])
+        ->name('routings.activate');
+    Route::patch('routings/{routing}/obsolete', [RoutingController::class, 'obsolete'])
+        ->name('routings.obsolete');
+    Route::post('routings/{routing}/recalculate', [RoutingController::class, 'recalculate'])
+        ->name('routings.recalculate');
+    Route::post('routings/{routing}/steps', [RoutingController::class, 'addStep'])
+        ->name('routings.steps.store');
+    Route::patch('routings/{routing}/steps/{step}', [RoutingController::class, 'updateStep'])
+        ->name('routings.steps.update');
+    Route::delete('routings/{routing}/steps/{step}', [RoutingController::class, 'removeStep'])
+        ->name('routings.steps.destroy');
+});
 require __DIR__.'/auth.php';

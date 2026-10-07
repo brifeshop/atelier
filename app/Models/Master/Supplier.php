@@ -41,6 +41,16 @@ class Supplier extends Model
         return 'SUP-' . str_pad($lastNumber + 1, 4, '0', STR_PAD_LEFT);
     }
 
+    public function prices()
+    {
+        return $this->hasMany(\App\Models\Purchasing\SupplierPrice::class);
+    }
+
+    public function purchaseReturns()
+    {
+        return $this->hasMany(\App\Models\Purchasing\PurchaseReturn::class);
+    }
+
     /**
      * Scope: hanya supplier aktif
      */

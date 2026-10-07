@@ -28,6 +28,8 @@ class StockMovement extends Model
         'reference_number',
         'date',
         'notes',
+        'adjustment_reason',
+        'stock_opname_id',
         'created_by',
     ];
 
@@ -71,6 +73,11 @@ class StockMovement extends Model
         return $prefix . str_pad($lastNumber + 1, 4, '0', STR_PAD_LEFT);
     }
 
+    public function stockOpname()
+    {
+        return $this->belongsTo(StockOpname::class);
+    }
+
     /**
      * Label type dengan warna
      */
@@ -93,6 +100,20 @@ class StockMovement extends Model
             'transfer' => 'Transfer',
             'adjustment' => 'Penyesuaian',
             default => ucfirst($this->type),
+        };
+    }
+
+    public function getAdjustmentReasonLabelAttribute(): string
+    {
+        return match($this->adjustment_reason) {
+            'damaged'    => 'Barang Rusak',
+            'lost'       => 'Barang Hilang',
+            'expired'    => 'Kadaluarsa',
+            'correction' => 'Koreksi Pencatatan',
+            'found'      => 'Barang Ditemukan',
+            'opname'     => 'Hasil Opname',
+            'other'      => 'Lainnya',
+            default      => '-',
         };
     }
 }
