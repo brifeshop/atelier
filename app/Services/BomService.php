@@ -6,6 +6,7 @@ use App\Models\Engineering\Bom;
 use App\Models\Engineering\BomItem;
 use App\Models\Master\Material;
 use App\Models\Master\Product;
+use App\Models\Engineering\Routing;
 use Illuminate\Support\Facades\DB;
 
 class BomService
@@ -22,8 +23,6 @@ class BomService
         $bom->load('items.item');
 
         $totalMaterial = 0;
-        $totalLabor = 0;
-        $totalOverhead = 0;
 
         foreach ($bom->items as $item) {
             // Kalau item adalah material → hitung langsung
@@ -31,15 +30,13 @@ class BomService
                 $material = Material::find($item->item_id);
                 if (!$material) continue;
 
-                $unitCost = (float) $material->price;
-                $totalCost = $item->qty * $unitCost * (1 + ($item->scrap_percent / 100));
-
+                $cost = self::calculateItemCost($item, $material);
                 $item->update([
-                    'unit_cost'  => $unitCost,
-                    'total_cost' => $totalCost,
+                    'unit_cost'  => $cost['unit_cost'],
+                    'total_cost' => $cost['total_cost'],
                 ]);
 
-                $totalMaterial += $totalCost;
+                $totalMaterial += $cost['total_cost'];
                 continue;
             }
 
@@ -65,7 +62,8 @@ class BomService
                 // Kalau sub-product tidak punya BOM, anggap material biasa
                 if (!$subBom) {
                     $unitCost = (float) ($subProduct->selling_price ?? 0);
-                    $totalCost = $item->qty * $unitCost * (1 + ($item->scrap_percent / 100));
+                    $scrapMultiplier = 1 + ((float) $item->scrap_percent / 100);
+                    $totalCost = (float) $item->qty * $unitCost * $scrapMultiplier;
 
                     $item->update([
                         'unit_cost'  => $unitCost,
@@ -80,20 +78,23 @@ class BomService
                 $subCost = self::calculateCost($subBom, array_merge($visited, [$subProductId]));
 
                 $unitCost = $subCost['total_cost'];
-                $totalCost = $item->qty * $unitCost * (1 + ($item->scrap_percent / 100));
+                $scrapMultiplier = 1 + ((float) $item->scrap_percent / 100);
+                $totalCost = (float) $item->qty * $unitCost * $scrapMultiplier;
 
                 $item->update([
                     'unit_cost'  => $unitCost,
                     'total_cost' => $totalCost,
                 ]);
 
-                // Total dari sub-BOM langsung ditambahkan
                 $totalMaterial += $totalCost;
             }
         }
 
         // Ambil dari routing (kalau ada)
-        $routing = \App\Models\Engineering\Routing::where('product_id', $bom->product_id)
+        $totalLabor = 0;
+        $totalOverhead = 0;
+
+        $routing = Routing::where('product_id', $bom->product_id)
             ->where('status', 'active')
             ->latest('effective_date')
             ->first();
@@ -114,6 +115,110 @@ class BomService
     }
 
     /**
+     * ⭐ INTI: Hitung cost per item berdasarkan costing_method material
+     * 
+     * Support 5 metode:
+     * - per_unit   : beli pcs, pakai pcs
+     * - per_area   : beli lembar, pakai luas (mm²)
+     * - per_volume : beli batang, pakai volume (mm³)
+     * - per_length : beli roll, pakai panjang (mm)
+     * - per_weight : beli karung, pakai berat (gram)
+     * 
+     * @param  BomItem  $bomItem
+     * @param  Material $material
+     * @return array ['unit_cost' => float, 'total_cost' => float, 'method' => string]
+     */
+    public static function calculateItemCost(BomItem $bomItem, Material $material): array
+    {
+        $method = $material->costing_method ?: 'per_unit';
+        $yield = ((float) ($material->yield_percent ?: 100)) / 100;
+        $scrapMultiplier = 1 + ((float) $bomItem->scrap_percent / 100);
+        $qty = (float) $bomItem->qty;
+        $price = (float) $material->price;
+
+        $unitCost = 0;
+
+        switch ($method) {
+            case 'per_unit':
+                // Beli pcs, pakai pcs
+                // unit_cost = price
+                $unitCost = $price;
+                break;
+
+            case 'per_area':
+                // Beli lembar, pakai luas
+                // price_per_mm2 = price / (panjang × lebar)
+                // unit_cost = (panjang_pakai × lebar_pakai) × price_per_mm2
+                $areaStandar = (float) $material->panjang_standar * (float) $material->lebar_standar;
+
+                if ($areaStandar > 0) {
+                    $pricePerMm2 = $price / $areaStandar;
+                    $areaPakai = (float) $bomItem->panjang_pakai * (float) $bomItem->lebar_pakai;
+                    $unitCost = $areaPakai * $pricePerMm2;
+                }
+                break;
+
+            case 'per_volume':
+                // Beli batang, pakai volume
+                // price_per_mm3 = price / (p × l × t)
+                // unit_cost = (p_pakai × l_pakai × t_pakai) × price_per_mm3
+                $volumeStandar = (float) $material->panjang_standar
+                    * (float) $material->lebar_standar
+                    * (float) $material->tinggi_standar;
+
+                if ($volumeStandar > 0) {
+                    $pricePerMm3 = $price / $volumeStandar;
+                    $volumePakai = (float) $bomItem->panjang_pakai
+                        * (float) $bomItem->lebar_pakai
+                        * (float) $bomItem->tinggi_pakai;
+                    $unitCost = $volumePakai * $pricePerMm3;
+                }
+                break;
+
+            case 'per_length':
+                // Beli roll, pakai panjang
+                // price_per_mm = price / panjang_standar
+                // unit_cost = panjang_pakai × price_per_mm
+                $panjangStandar = (float) $material->panjang_standar;
+
+                if ($panjangStandar > 0) {
+                    $pricePerMm = $price / $panjangStandar;
+                    $unitCost = (float) $bomItem->panjang_pakai * $pricePerMm;
+                }
+                break;
+
+            case 'per_weight':
+                // Beli karung, pakai berat
+                // price_per_gram = price / berat_standar
+                // unit_cost = berat_pakai × price_per_gram
+                $beratStandar = (float) $material->berat_standar;
+
+                if ($beratStandar > 0) {
+                    $pricePerGram = $price / $beratStandar;
+                    $unitCost = (float) $bomItem->berat_pakai * $pricePerGram;
+                }
+                break;
+
+            default:
+                $unitCost = $price;
+        }
+
+        // Apply yield (waste factor)
+        if ($yield > 0) {
+            $unitCost = $unitCost / $yield;
+        }
+
+        // Total = qty × unit_cost × (1 + scrap%)
+        $totalCost = $qty * $unitCost * $scrapMultiplier;
+
+        return [
+            'unit_cost'  => round($unitCost, 2),
+            'total_cost' => round($totalCost, 2),
+            'method'     => $method,
+        ];
+    }
+
+    /**
      * Update BOM total cost di database
      */
     public static function updateCost(Bom $bom): Bom
@@ -121,7 +226,6 @@ class BomService
         DB::beginTransaction();
         try {
             $cost = self::calculateCost($bom);
-
             $bom->update($cost);
 
             DB::commit();
@@ -162,18 +266,23 @@ class BomService
 
         foreach ($bom->items as $item) {
             $node = [
-                'level'      => $level,
-                'sequence'   => $item->sequence,
-                'item_type'  => $item->item_type,
-                'item_id'    => $item->item_id,
-                'kode'       => $item->item->kode ?? '-',
-                'nama'       => $item->item->nama ?? '-',
-                'qty'        => (float) $item->qty,
-                'unit'       => $item->unit,
+                'level'         => $level,
+                'sequence'      => $item->sequence,
+                'item_type'     => $item->item_type,
+                'item_id'       => $item->item_id,
+                'kode'          => $item->item->kode ?? '-',
+                'kode_bahan'    => $item->item->kode_bahan ?? null,
+                'nama'          => $item->item->nama ?? '-',
+                'spesifikasi'   => $item->spesifikasi,
+                'divisi'        => $item->divisi,
+                'level_label'   => $item->level,
+                'qty'           => (float) $item->qty,
+                'unit'          => $item->unit,
+                'dimension'     => $item->dimension_label,
                 'scrap_percent' => (float) $item->scrap_percent,
-                'unit_cost'  => (float) $item->unit_cost,
-                'total_cost' => (float) $item->total_cost,
-                'children'   => [],
+                'unit_cost'     => (float) $item->unit_cost,
+                'total_cost'    => (float) $item->total_cost,
+                'children'      => [],
             ];
 
             // Kalau product → cari sub-BOM
