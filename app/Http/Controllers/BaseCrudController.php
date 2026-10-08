@@ -3,7 +3,8 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 abstract class BaseCrudController extends Controller
 {
@@ -11,16 +12,24 @@ abstract class BaseCrudController extends Controller
     protected string $viewPrefix;
     protected string $routePrefix;
     protected string $title;
+
     protected array $searchable = [];
     protected array $validationRules = [];
+    protected array $relations = [];
     protected int $perPage = 15;
+    protected string $orderBy = 'latest';
+    protected string $orderColumn = 'created_at';
 
     /**
-     * Display a listing of the resource.
+     * List semua data
      */
     public function index(Request $request)
     {
         $query = $this->model::query();
+
+        if (!empty($this->relations)) {
+            $query->with($this->relations);
+        }
 
         // Search
         if ($request->filled('search') && !empty($this->searchable)) {
@@ -32,37 +41,41 @@ abstract class BaseCrudController extends Controller
             });
         }
 
-        $items = $query->latest()->paginate($this->perPage);
+        // Order
+        if ($this->orderBy === 'latest') {
+            $query->latest($this->orderColumn);
+        } else {
+            $query->orderBy($this->orderColumn, $this->orderBy);
+        }
+
+        $items = $query->paginate($this->perPage);
 
         return view("{$this->viewPrefix}.index", [
-            'items' => $items,
-            'title' => $this->title,
+            'items'       => $items,
+            'title'       => $this->title,
             'routePrefix' => $this->routePrefix,
         ]);
     }
 
     /**
-     * Show the form for creating a new resource.
+     * Form create
      */
     public function create()
     {
         return view("{$this->viewPrefix}.create", [
-            'title' => $this->title,
+            'title'       => $this->title,
             'routePrefix' => $this->routePrefix,
         ]);
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Simpan data baru
      */
     public function store(Request $request)
     {
         $validated = $request->validate($this->validationRules);
 
-        $item = $this->model::create($validated);
-
-        // Hook untuk custom logic
-        $this->afterStore($item, $request);
+        $this->model::create($validated);
 
         return redirect()
             ->route("{$this->routePrefix}.index")
@@ -70,45 +83,53 @@ abstract class BaseCrudController extends Controller
     }
 
     /**
-     * Display the specified resource.
+     * Detail
      */
     public function show(string $id)
     {
         $item = $this->model::findOrFail($id);
 
         return view("{$this->viewPrefix}.show", [
-            'item' => $item,
-            'title' => $this->title,
+            'item'        => $item,
+            'title'       => $this->title,
             'routePrefix' => $this->routePrefix,
         ]);
     }
 
     /**
-     * Show the form for editing the specified resource.
+     * Form edit
      */
     public function edit(string $id)
     {
         $item = $this->model::findOrFail($id);
 
         return view("{$this->viewPrefix}.edit", [
-            'item' => $item,
-            'title' => $this->title,
+            'item'        => $item,
+            'title'       => $this->title,
             'routePrefix' => $this->routePrefix,
         ]);
     }
 
     /**
-     * Update the specified resource in storage.
+     * Update
      */
     public function update(Request $request, string $id)
     {
         $item = $this->model::findOrFail($id);
-        $validated = $request->validate($this->validationRules);
+
+        $rules = $this->validationRules;
+
+        // Replace unique rule untuk update (exclude current ID)
+        foreach ($rules as $field => $rule) {
+            if (is_string($rule) && Str::contains($rule, 'unique:')) {
+                // Add ",{id}" to unique rule
+                $rules[$field] = $rule . ',' . $item->id;
+            }
+        }
+
+        $validated = $request->validate($rules);
 
         $item->update($validated);
-
-        // Hook untuk custom logic
-        $this->afterUpdate($item, $request);
 
         return redirect()
             ->route("{$this->routePrefix}.index")
@@ -116,31 +137,153 @@ abstract class BaseCrudController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Hapus data — dengan error handling yang jelas
      */
     public function destroy(string $id)
     {
         $item = $this->model::findOrFail($id);
-        $item->delete();
 
-        return redirect()
-            ->route("{$this->routePrefix}.index")
-            ->with('success', "{$this->title} berhasil dihapus.");
+        // Cek apakah model punya method canDelete()
+        if (method_exists($item, 'canDelete')) {
+            $check = $item->canDelete();
+            if ($check !== true) {
+                return back()->with('error', $check);
+            }
+        }
+
+        try {
+            $item->delete();
+
+            return redirect()
+                ->route("{$this->routePrefix}.index")
+                ->with('success', "{$this->title} berhasil dihapus.");
+
+        } catch (\Illuminate\Database\QueryException $e) {
+            // Cek error foreign key
+            $isForeignKeyError = str_contains($e->getMessage(), 'FOREIGN KEY')
+                || str_contains($e->getMessage(), 'Integrity constraint')
+                || $e->getCode() == '23000';
+
+            if ($isForeignKeyError) {
+                $referensi = $this->getRelatedReferences($id);
+
+                $message = "❌ Tidak bisa hapus {$this->title} ini karena masih digunakan di data lain.";
+
+                if (!empty($referensi)) {
+                    $message .= " Referensi yang ditemukan: " . implode(', ', $referensi) . ".";
+                }
+
+                $message .= " Silakan nonaktifkan saja (uncheck 'Aktif') atau hapus referensi terlebih dahulu.";
+
+                return back()->with('error', $message);
+            }
+
+            // Error lain
+            return back()->with('error', "Gagal menghapus {$this->title}: " . $e->getMessage());
+        }
     }
 
     /**
-     * Hook: setelah store
+     * Cek referensi yang menghalangi delete
      */
-    protected function afterStore(Model $item, Request $request): void
+    protected function getRelatedReferences(string $id): array
     {
-        // Override di child controller jika perlu
-    }
+        $references = [];
+        $modelClass = get_class($this->model::find($id));
 
-    /**
-     * Hook: setelah update
-     */
-    protected function afterUpdate(Model $item, Request $request): void
-    {
-        // Override di child controller jika perlu
+        // Cek BOM Items (khusus untuk Material & Product)
+        if (str_contains($modelClass, 'Material')) {
+            try {
+                $count = \App\Models\Engineering\BomItem::where('item_type', 'material')
+                    ->where('item_id', $id)
+                    ->count();
+                if ($count > 0) $references[] = "{$count} BOM Item";
+
+                $count = \App\Models\Production\WorkOrderMaterial::where('material_id', $id)->count();
+                if ($count > 0) $references[] = "{$count} Work Order Material";
+
+                $count = \App\Models\Warehouse\Inventory::where('item_type', 'material')
+                    ->where('item_id', $id)
+                    ->count();
+                if ($count > 0) $references[] = "{$count} Inventory";
+
+                $count = \App\Models\Warehouse\StockMovement::where('item_type', 'material')
+                    ->where('item_id', $id)
+                    ->count();
+                if ($count > 0) $references[] = "{$count} Stock Movement";
+
+                $count = \App\Models\Purchasing\GoodsReceiptItem::where('material_id', $id)->count();
+                if ($count > 0) $references[] = "{$count} Goods Receipt Item";
+
+                $count = \App\Models\Purchasing\PurchaseOrderItem::where('material_id', $id)->count();
+                if ($count > 0) $references[] = "{$count} Purchase Order Item";
+
+                $count = \App\Models\Purchasing\PurchaseRequisitionItem::where('material_id', $id)->count();
+                if ($count > 0) $references[] = "{$count} Purchase Requisition Item";
+
+            } catch (\Exception $e) {
+                // Skip kalau tabel tidak ada
+            }
+        }
+
+        if (str_contains($modelClass, 'Product')) {
+            try {
+                $count = \App\Models\Engineering\BomItem::where('item_type', 'product')
+                    ->where('item_id', $id)
+                    ->count();
+                if ($count > 0) $references[] = "{$count} BOM Item (sebagai sub-assembly)";
+
+                $count = \App\Models\Production\WorkOrder::where('product_id', $id)->count();
+                if ($count > 0) $references[] = "{$count} Work Order";
+
+                $count = \App\Models\Warehouse\Inventory::where('item_type', 'product')
+                    ->where('item_id', $id)
+                    ->count();
+                if ($count > 0) $references[] = "{$count} Inventory";
+            } catch (\Exception $e) {
+                // Skip
+            }
+        }
+
+        if (str_contains($modelClass, 'Bom')) {
+            try {
+                $count = \App\Models\Production\WorkOrder::where('bom_id', $id)->count();
+                if ($count > 0) $references[] = "{$count} Work Order";
+            } catch (\Exception $e) {
+                // Skip
+            }
+        }
+
+        if (str_contains($modelClass, 'Routing')) {
+            try {
+                $count = \App\Models\Production\WorkOrder::where('routing_id', $id)->count();
+                if ($count > 0) $references[] = "{$count} Work Order";
+            } catch (\Exception $e) {
+                // Skip
+            }
+        }
+
+        if (str_contains($modelClass, 'Warehouse')) {
+            try {
+                $count = \App\Models\Warehouse\Location::where('warehouse_id', $id)->count();
+                if ($count > 0) $references[] = "{$count} Location";
+            } catch (\Exception $e) {
+                // Skip
+            }
+        }
+
+        if (str_contains($modelClass, 'Supplier')) {
+            try {
+                $count = \App\Models\Purchasing\PurchaseOrder::where('supplier_id', $id)->count();
+                if ($count > 0) $references[] = "{$count} Purchase Order";
+
+                $count = \App\Models\Master\Material::where('supplier_id', $id)->count();
+                if ($count > 0) $references[] = "{$count} Material";
+            } catch (\Exception $e) {
+                // Skip
+            }
+        }
+
+        return $references;
     }
 }

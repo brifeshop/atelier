@@ -159,9 +159,18 @@ class BomService
                 break;
 
             case 'per_volume':
-                // Beli batang, pakai volume
-                // price_per_mm3 = price / (p × l × t)
-                // unit_cost = (p_pakai × l_pakai × t_pakai) × price_per_mm3
+            // Cek jenis volume
+            if ($material->volume_type === 'cair') {
+                // Volume Cair (ml)
+                $volumeStandar = (float) $material->volume_standar;
+                $volumePakai = (float) $bomItem->volume_pakai;
+
+                if ($volumeStandar > 0 && $volumePakai > 0) {
+                    $pricePerMl = $price / $volumeStandar;
+                    $unitCost = $volumePakai * $pricePerMl;
+                }
+            } else {
+                // Volume Kotak (P × L × T)
                 $volumeStandar = (float) $material->panjang_standar
                     * (float) $material->lebar_standar
                     * (float) $material->tinggi_standar;
@@ -173,7 +182,8 @@ class BomService
                         * (float) $bomItem->tinggi_pakai;
                     $unitCost = $volumePakai * $pricePerMm3;
                 }
-                break;
+            }
+            break;
 
             case 'per_length':
                 // Beli roll, pakai panjang

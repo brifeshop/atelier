@@ -90,6 +90,14 @@ class BomItem extends Model
      */
     public function getDimensionLabelAttribute(): string
     {
+        // Cek material — kalau volume cair
+        if ($this->item_type === 'material' && $this->item) {
+            $material = $this->item;
+            if ($material->costing_method === 'per_volume' && $material->volume_type === 'cair') {
+                return $this->volume_pakai ? "{$this->volume_pakai} ml" : '-';
+            }
+        }
+
         $parts = [];
 
         if ($this->panjang_pakai) $parts[] = $this->panjang_pakai;

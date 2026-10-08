@@ -9,6 +9,7 @@ use App\Http\Controllers\Master\MachineController;
 use App\Http\Controllers\Master\MaterialController;
 use App\Http\Controllers\Master\ProductController;
 use App\Http\Controllers\Master\WorkCenterController;
+use App\Http\Controllers\Master\MaterialImportController;
 
 use App\Http\Controllers\Sales\SalesOrderController;
 
@@ -57,6 +58,19 @@ Route::middleware(['auth', 'verified'])->prefix('master')->name('master.')->grou
     Route::resource('suppliers', SupplierController::class);
     Route::resource('employees', EmployeeController::class);
     Route::resource('machines', MachineController::class);
+
+    // ============ MATERIAL CUSTOM ROUTES ============
+    Route::prefix('materials')->name('materials.')->group(function () {
+        // Import CSV
+        Route::get('import', [MaterialImportController::class, 'index'])->name('import');
+        Route::get('import/template', [MaterialImportController::class, 'template'])->name('import.template');
+        Route::post('import/preview', [MaterialImportController::class, 'preview'])->name('import.preview');
+        Route::post('import/store', [MaterialImportController::class, 'store'])->name('import.store');
+
+        // Quick Store (dari halaman BOM)
+        Route::post('quick-store', [MaterialController::class, 'quickStore'])->name('quick-store');
+    });
+
     Route::resource('materials', MaterialController::class);
     Route::resource('products', ProductController::class);
     Route::resource('work-centers', WorkCenterController::class);
@@ -74,25 +88,33 @@ Route::middleware(['auth', 'verified'])->prefix('warehouse')->name('warehouse.')
     Route::resource('warehouses', WarehouseController::class);
     Route::resource('locations', LocationController::class);
     Route::resource('inventories', InventoryController::class)->only(['index', 'show', 'update']);
+
+    // Stock Movements — custom routes HARUS sebelum resource
     Route::get('stock-movements/adjustments', [StockMovementController::class, 'adjustments'])
-    ->name('stock-movements.adjustments');
+        ->name('stock-movements.adjustments');
     Route::get('stock-movements/get-stock', [StockMovementController::class, 'getStock'])
         ->name('stock-movements.get-stock');
     Route::get('stock-movements/get-locations', [StockMovementController::class, 'getLocations'])
         ->name('stock-movements.get-locations');
-    Route::resource('stock-movements', StockMovementController::class)->only(['index', 'create', 'store', 'show']);
     Route::get('stock-movements/transfer/create', [StockMovementController::class, 'createTransfer'])
         ->name('stock-movements.transfer.create');
     Route::post('stock-movements/transfer', [StockMovementController::class, 'storeTransfer'])
         ->name('stock-movements.transfer.store');
-        Route::resource('stock-opnames', StockOpnameController::class);
+    Route::resource('stock-movements', StockMovementController::class)->only(['index', 'create', 'store', 'show']);
+
+    // Stock Opnames
+    Route::resource('stock-opnames', StockOpnameController::class);
     Route::patch('stock-opnames/{stock_opname}/approve', [StockOpnameController::class, 'approve'])
         ->name('stock-opnames.approve');
     Route::patch('stock-opnames/{stock_opname}/cancel', [StockOpnameController::class, 'cancel'])
         ->name('stock-opnames.cancel');
     Route::patch('stock-opnames/{stock_opname}/items/{item}', [StockOpnameController::class, 'updateItem'])
         ->name('stock-opnames.items.update');
+
+    // Stock Cards
     Route::get('stock-cards', [StockCardController::class, 'index'])->name('stock-cards.index');
+
+    // Low Stocks
     Route::get('low-stocks', [LowStockController::class, 'index'])->name('low-stocks.index');
 });
 
@@ -132,9 +154,12 @@ Route::middleware(['auth', 'verified'])->prefix('purchasing')->name('purchasing.
         ->name('supplier-prices.compare');
     Route::get('api/supplier-price', [SupplierPriceController::class, 'getPrice'])
         ->name('api.supplier-price');
+
+    // Supplier Evaluation
     Route::resource('supplier-evaluations', SupplierEvaluationController::class);
 });
 
+// ==================== NOTIFICATIONS ====================
 Route::middleware(['auth'])->group(function () {
     Route::patch('notifications/read-all', function () {
         auth()->user()->unreadNotifications->markAsRead();
@@ -142,10 +167,8 @@ Route::middleware(['auth'])->group(function () {
     })->name('notifications.read-all');
 });
 
-
 // ==================== ENGINEERING ====================
 Route::middleware(['auth', 'verified'])->prefix('engineering')->name('engineering.')->group(function () {
-    
     // BOM
     Route::resource('boms', BomController::class);
     Route::patch('boms/{bom}/activate', [BomController::class, 'activate'])
@@ -177,10 +200,9 @@ Route::middleware(['auth', 'verified'])->prefix('engineering')->name('engineerin
         ->name('routings.steps.destroy');
 });
 
-    // ==================== PRODUCTION ====================
-    Route::middleware(['auth', 'verified'])->prefix('production')->name('production.')->group(function () {
-    
-        // Work Orders
+// ==================== PRODUCTION ====================
+Route::middleware(['auth', 'verified'])->prefix('production')->name('production.')->group(function () {
+    // Work Orders
     Route::resource('work-orders', WorkOrderController::class);
     Route::patch('work-orders/{work_order}/release', [WorkOrderController::class, 'release'])
         ->name('work-orders.release');
@@ -192,15 +214,15 @@ Route::middleware(['auth', 'verified'])->prefix('engineering')->name('engineerin
         ->name('work-orders.cancel');
     Route::post('work-orders/{work_order}/recalculate', [WorkOrderController::class, 'recalculate'])
         ->name('work-orders.recalculate');
-    
-        // Costing
+
+    // Costing
     Route::get('costing', [CostingController::class, 'index'])->name('costing.index');
     Route::get('costing/variance', [CostingController::class, 'variance'])->name('costing.variance');
     Route::get('costing/margin', [CostingController::class, 'margin'])->name('costing.margin');
     Route::get('costing/{cost_snapshot}', [CostingController::class, 'show'])->name('costing.show');
     Route::get('costing-export', [CostingController::class, 'export'])->name('costing.export');
 
-        // Snapshot manual dari WO
+    // Snapshot manual dari WO
     Route::post('work-orders/{work_order}/snapshot', [WorkOrderController::class, 'snapshot'])
         ->name('work-orders.snapshot');
 });

@@ -54,10 +54,26 @@
                             class="w-full px-3 py-2.5 bg-navy-950 border border-navy-700 rounded-lg text-sm text-white focus:border-gold-500 focus:ring-2 focus:ring-gold-500/20 focus:outline-none transition">
                         <option value="per_unit">Per Unit — Beli pcs, pakai pcs</option>
                         <option value="per_area">Per Area — Beli lembar, pakai luas (mm²)</option>
-                        <option value="per_volume">Per Volume — Beli batang, pakai volume (mm³)</option>
+                        <option value="per_volume">Per Volume — Beli batang/cair, pakai volume</option>
                         <option value="per_length">Per Panjang — Beli roll, pakai panjang (mm)</option>
                         <option value="per_weight">Per Berat — Beli karung, pakai berat (gram)</option>
                     </select>
+                </div>
+
+                {{-- VOLUME TYPE (muncul hanya kalau per_volume) --}}
+                <div x-show="costingMethod === 'per_volume'" x-cloak class="mt-4">
+                    <label class="block text-xs font-semibold text-navy-300 uppercase tracking-wider mb-2">
+                        Jenis Volume <span class="text-red-400">*</span>
+                    </label>
+                    <select name="volume_type" x-model="volumeType" :required="costingMethod === 'per_volume'"
+                            class="w-full px-3 py-2.5 bg-navy-950 border border-navy-700 rounded-lg text-sm text-white focus:border-gold-500 focus:ring-2 focus:ring-gold-500/20 focus:outline-none transition">
+                        <option value="kotak">Volume Kotak (P × L × T) — untuk balok, batang</option>
+                        <option value="cair">Volume Cair (ml) — untuk cat, varnish, tinta, oli</option>
+                    </select>
+                    <p class="text-xs text-navy-500 mt-1">
+                        <span x-show="volumeType === 'kotak'">Pakai dimensi P × L × T untuk hitung volume.</span>
+                        <span x-show="volumeType === 'cair'">Pakai volume dalam ml (milliliter).</span>
+                    </p>
                 </div>
 
                 {{-- INFO --}}
@@ -79,8 +95,8 @@
             <x-atelier.card x-show="needsDimension" x-cloak title="Dimensi Standar" subtitle="Ukuran satuan beli" :brackets="true">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
 
-                    {{-- PANJANG (untuk per_area, per_volume, per_length) --}}
-                    <template x-if="costingMethod === 'per_area' || costingMethod === 'per_volume' || costingMethod === 'per_length'">
+                    {{-- PANJANG (untuk per_area, per_volume kotak, per_length) --}}
+                    <template x-if="costingMethod === 'per_area' || costingMethod === 'per_length' || (costingMethod === 'per_volume' && volumeType === 'kotak')">
                         <div>
                             <x-atelier.input 
                                 name="panjang_standar" 
@@ -95,8 +111,8 @@
                         </div>
                     </template>
 
-                    {{-- LEBAR (untuk per_area, per_volume) --}}
-                    <template x-if="costingMethod === 'per_area' || costingMethod === 'per_volume'">
+                    {{-- LEBAR (untuk per_area, per_volume kotak) --}}
+                    <template x-if="costingMethod === 'per_area' || (costingMethod === 'per_volume' && volumeType === 'kotak')">
                         <div>
                             <x-atelier.input 
                                 name="lebar_standar" 
@@ -111,8 +127,8 @@
                         </div>
                     </template>
 
-                    {{-- TINGGI (untuk per_volume) --}}
-                    <template x-if="costingMethod === 'per_volume'">
+                    {{-- TINGGI (untuk per_volume kotak) --}}
+                    <template x-if="costingMethod === 'per_volume' && volumeType === 'kotak'">
                         <div>
                             <x-atelier.input 
                                 name="tinggi_standar" 
@@ -143,6 +159,21 @@
                         </div>
                     </template>
 
+                    {{-- VOLUME CAIR (untuk per_volume cair) --}}
+                    <template x-if="costingMethod === 'per_volume' && volumeType === 'cair'">
+                        <div class="md:col-span-3">
+                            <x-atelier.input 
+                                name="volume_standar" 
+                                label="Volume Standar (ml)" 
+                                type="number" 
+                                step="0.01" 
+                                min="0"
+                                :value="old('volume_standar')" 
+                                placeholder="5000"
+                                hint="Contoh: 5 liter = 5.000 ml, 1 liter = 1.000 ml"
+                            />
+                        </div>
+                    </template>
                 </div>
             </x-atelier.card>
 
@@ -173,18 +204,15 @@
                         placeholder="100"
                         hint="100 = tanpa waste, 85 = waste 15%"
                     />
-
                 </div>
             </x-atelier.card>
 
             {{-- ============ STOK ============ --}}
             <x-atelier.card title="Stok & Supplier" :brackets="true">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-
                     <x-atelier.input name="min_stock" label="Min Stock" type="number" step="0.01" min="0" :value="old('min_stock')" hint="Batas minimum" />
                     <x-atelier.input name="max_stock" label="Max Stock" type="number" step="0.01" min="0" :value="old('max_stock')" hint="Batas maksimum" />
                     <x-atelier.input name="location" label="Lokasi Default" :value="old('location')" placeholder="Rak A-01" />
-
                 </div>
             </x-atelier.card>
 
@@ -216,6 +244,7 @@
         function materialForm() {
             return {
                 costingMethod: '{{ old('costing_method', 'per_unit') }}',
+                volumeType: '{{ old('volume_type', 'kotak') }}',
 
                 get needsDimension() {
                     return ['per_area', 'per_volume', 'per_length', 'per_weight'].includes(this.costingMethod);
@@ -234,9 +263,9 @@
                             example: 'Contoh: MDF Rp 500K/lembar (2400×1200), BOM butuh 200×100 → Cost Rp 3.472',
                         },
                         per_volume: {
-                            title: 'Per Volume — Beli batang, pakai volume',
-                            description: 'Cocok untuk kayu balok, besi beton, resin.',
-                            example: 'Contoh: Kayu Rp 200K/batang (100×100×4000), BOM butuh 100×100×500 → Cost Rp 25.000',
+                            title: 'Per Volume — Beli batang/cair, pakai volume',
+                            description: 'Volume Kotak: untuk balok, kayu. Volume Cair: untuk cat, varnish, tinta, oli.',
+                            example: 'Cair: Varnish Rp 500K/5 liter, BOM butuh 50 ml → Cost Rp 5.000',
                         },
                         per_length: {
                             title: 'Per Panjang — Beli roll, pakai panjang',
@@ -253,7 +282,9 @@
                 },
 
                 onMethodChange() {
-                    // Reset info — biar reaktif
+                    if (this.costingMethod !== 'per_volume') {
+                        this.volumeType = 'kotak';
+                    }
                 }
             }
         }

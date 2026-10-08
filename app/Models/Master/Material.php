@@ -23,6 +23,7 @@ class Material extends Model
         'tinggi_standar',       // ← TAMBAH
         'berat_standar',        // ← TAMBAH
         'volume_standar',       // ← TAMBAH
+        'volume_type',          // ← TAMBAH
         'costing_method',       // ← TAMBAH
         'base_unit',            // ← TAMBAH
         'yield_percent',        // ← TAMBAH
@@ -181,6 +182,11 @@ class Material extends Model
                 return $standar > 0 ? ($price / $standar) / $yield : 0;
 
             case 'per_volume':
+                // Cek jenis volume
+                if ($this->volume_type === 'cair') {
+                    $standar = (float) $this->volume_standar;
+                    return $standar > 0 ? ($price / $standar) / $yield : 0;
+                }
                 $standar = (float) $this->panjang_standar * (float) $this->lebar_standar * (float) $this->tinggi_standar;
                 return $standar > 0 ? ($price / $standar) / $yield : 0;
 
@@ -208,6 +214,10 @@ class Material extends Model
                 return "{$this->panjang_standar} × {$this->lebar_standar} mm";
 
             case 'per_volume':
+                // Cek jenis volume
+                if ($this->volume_type === 'cair') {
+                    return "{$this->volume_standar} ml";
+                }
                 return "{$this->panjang_standar} × {$this->lebar_standar} × {$this->tinggi_standar} mm";
 
             case 'per_length':
@@ -220,6 +230,34 @@ class Material extends Model
             default:
                 return "1 {$this->unit}";
         }
+    }
+
+    /**
+     * Label volume type
+     */
+    public function getVolumeTypeLabelAttribute(): string
+    {
+        return match($this->volume_type) {
+            'kotak' => 'Volume Kotak (P × L × T)',
+            'cair'  => 'Volume Cair (ml)',
+            default => '-',
+        };
+    }
+
+    /**
+     * Cek apakah volume cair
+     */
+    public function getIsVolumeCairAttribute(): bool
+    {
+        return $this->costing_method === 'per_volume' && $this->volume_type === 'cair';
+    }
+
+    /**
+     * Cek apakah volume kotak
+     */
+    public function getIsVolumeKotakAttribute(): bool
+    {
+        return $this->costing_method === 'per_volume' && $this->volume_type === 'kotak';
     }
 
     /**

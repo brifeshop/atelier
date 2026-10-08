@@ -179,4 +179,115 @@ class MaterialController extends BaseCrudController
             ->route("{$this->routePrefix}.index")
             ->with('success', "{$this->title} berhasil diperbarui.");
     }
+
+    public function destroy(string $id)
+    {
+        $material = Material::findOrFail($id);
+
+        try {
+            $material->delete();
+
+            return redirect()
+                ->route('master.materials.index')
+                ->with('success', 'Material berhasil dihapus.');
+
+        } catch (\Illuminate\Database\QueryException $e) {
+            $isForeignKeyError = str_contains($e->getMessage(), 'FOREIGN KEY')
+                || str_contains($e->getMessage(), 'Integrity constraint')
+                || $e->getCode() == '23000';
+
+            if ($isForeignKeyError) {
+                $referensi = [];
+
+                $count = \App\Models\Engineering\BomItem::where('item_type', 'material')->where('item_id', $id)->count();
+                if ($count > 0) $referensi[] = "{$count} BOM Item";
+
+                $count = \App\Models\Production\WorkOrderMaterial::where('material_id', $id)->count();
+                if ($count > 0) $referensi[] = "{$count} Work Order Material";
+
+                $count = \App\Models\Warehouse\Inventory::where('item_type', 'material')->where('item_id', $id)->count();
+                if ($count > 0) $referensi[] = "{$count} Inventory";
+
+                $count = \App\Models\Warehouse\StockMovement::where('item_type', 'material')->where('item_id', $id)->count();
+                if ($count > 0) $referensi[] = "{$count} Stock Movement";
+
+                $message = "❌ Tidak bisa hapus material <strong>{$material->nama}</strong> karena masih digunakan di: <br>";
+                $message .= "• " . implode("<br>• ", $referensi);
+                $message .= "<br><br>💡 <strong>Saran:</strong> Nonaktifkan material (uncheck 'Material Aktif' di halaman edit) untuk menyembunyikannya tanpa menghapus data historis.";
+
+                return back()->with('error', $message);
+            }
+
+            return back()->with('error', 'Gagal menghapus material: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Quick store material dari halaman BOM
+     * 
+     * POST /master/materials/quick-store
+     */
+    public function quickStore(Request $request)
+    {
+        $validated = $request->validate([
+            'nama'              => 'required|string|max:255',
+            'kode_bahan'        => 'nullable|string|max:50',
+            'category'          => 'nullable|string|max:100',
+            'unit'              => 'required|string|max:20',
+            'costing_method'    => 'required|in:per_unit,per_area,per_volume,per_length,per_weight',
+            'volume_type'       => 'nullable|in:kotak,cair',
+            'panjang_standar'   => 'nullable|numeric|min:0',
+            'lebar_standar'     => 'nullable|numeric|min:0',
+            'tinggi_standar'    => 'nullable|numeric|min:0',
+            'berat_standar'     => 'nullable|numeric|min:0',
+            'volume_standar'    => 'nullable|numeric|min:0',
+            'price'             => 'required|numeric|min:0',
+            'yield_percent'     => 'nullable|numeric|min:0|max:100',
+            'location'          => 'nullable|string|max:100',
+        ]);
+
+        try {
+            $validated['kode'] = Material::generateKode();
+            $validated['is_active'] = true;
+            $validated['yield_percent'] = $validated['yield_percent'] ?? 100;
+
+            // Reset dimensi kalau per_unit
+            if ($validated['costing_method'] === 'per_unit') {
+                $validated['panjang_standar'] = null;
+                $validated['lebar_standar'] = null;
+                $validated['tinggi_standar'] = null;
+                $validated['berat_standar'] = null;
+                $validated['volume_standar'] = null;
+                $validated['volume_type'] = null;
+            }
+
+            // Reset volume cair kalau bukan per_volume
+            if ($validated['costing_method'] !== 'per_volume') {
+                $validated['volume_type'] = null;
+                $validated['volume_standar'] = null;
+            }
+
+            $material = Material::create($validated);
+
+            return response()->json([
+                'success' => true,
+                'material' => [
+                    'id' => $material->id,
+                    'kode' => $material->kode,
+                    'kode_bahan' => $material->kode_bahan,
+                    'nama' => $material->nama,
+                    'spesifikasi' => $material->spesifikasi,
+                    'unit' => $material->unit,
+                    'costing_method' => $material->costing_method,
+                    'volume_type' => $material->volume_type,
+                ],
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal simpan material: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
 }

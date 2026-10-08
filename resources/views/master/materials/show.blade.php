@@ -82,6 +82,11 @@
                         {{ $item->costing_method_label }}
                     </span>
                     <p class="text-xs text-navy-500 mt-2">{{ $item->costing_method_description }}</p>
+                    @if($item->costing_method === 'per_volume' && $item->volume_type)
+                        <p class="text-xs text-navy-400 mt-2">
+                            Jenis Volume: <span class="text-gold-500">{{ $item->volume_type_label }}</span>
+                        </p>
+                    @endif
                 </div>
                 <div>
                     <p class="text-[10px] font-mono text-navy-500 uppercase tracking-widest mb-1">Satuan Beli</p>
@@ -122,6 +127,18 @@
                 <div class="mt-6 pt-6 border-t border-navy-800">
                     <p class="text-[10px] font-mono text-navy-500 uppercase tracking-widest mb-3">Dimensi Standar</p>
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        {{-- Volume Cair --}}
+                        @if($item->volume_type === 'cair' && $item->volume_standar)
+                            <div class="bg-navy-800/30 border border-navy-700 rounded-lg p-3 col-span-2">
+                                <p class="text-[10px] text-navy-500 mb-1">Volume Cair</p>
+                                <p class="text-sm text-white font-mono">{{ number_format($item->volume_standar, 2) }} ml</p>
+                                <p class="text-xs text-navy-500 mt-1">
+                                    ≈ {{ number_format($item->volume_standar / 1000, 2) }} liter
+                                </p>
+                            </div>
+                        @endif
+
+                        {{-- Dimensi kotak/lembaran --}}
                         @if($item->panjang_standar)
                             <div class="bg-navy-800/30 border border-navy-700 rounded-lg p-3">
                                 <p class="text-[10px] text-navy-500 mb-1">Panjang</p>
@@ -182,7 +199,7 @@
             </div>
         </x-atelier.card>
 
-        {{-- DIMENSI PAKAI (kalau ada BOM items) --}}
+        {{-- DIGUNAKAN DI BOM --}}
         @php
             $bomUsage = \App\Models\Engineering\BomItem::with('bom.product')
                 ->where('item_type', 'material')

@@ -17,6 +17,8 @@
                     'kode_bahan' => $m->kode_bahan,
                     'unit' => $m->unit,
                     'costing_method' => $m->costing_method,
+                    'volume_type' => $m->volume_type,
+                    'spesifikasi' => $m->spesifikasi,
                 ],
             ]))
             ->merge($products->map(fn($p) => [
@@ -34,8 +36,7 @@
             ->values()
             ->all();
 
-        // ============ KONFIGURASI DIVISI ============
-        // Ubah array ini sesuai kebutuhan industri Anda
+        // Konfigurasi Divisi
         $divisiOptions = [
             'Set Up',
             'Kayu',
@@ -45,21 +46,6 @@
             'Packing',
             'QC',
             'Lainnya',
-        ];
-
-        // ============ KONFIGURASI SATUAN ============
-        $unitOptions = [
-            // Satuan hitung
-            'pcs', 'unit', 'set', 'lusin', 'rim',
-            // Panjang
-            'mm', 'cm', 'm',
-            // Berat
-            'gram', 'kg', 'ton',
-            // Volume
-            'ml', 'liter',
-            // Area/Volume 3D
-            'mm2', 'cm2', 'm2',
-            'mm3', 'cm3', 'm3',
         ];
     @endphp
 
@@ -237,7 +223,7 @@
 
                     <div class="space-y-5">
 
-                        {{-- LEVEL (TOMbol) --}}
+                        {{-- LEVEL (Tombol) --}}
                         <div>
                             <label class="block text-xs font-semibold text-navy-300 uppercase tracking-wider mb-2">
                                 Level <span class="text-red-400">*</span>
@@ -264,7 +250,7 @@
                             </p>
                         </div>
 
-                        {{-- DIVISI (TOMbol) --}}
+                        {{-- DIVISI (Tombol) --}}
                         <div>
                             <label class="block text-xs font-semibold text-navy-300 uppercase tracking-wider mb-2">
                                 Divisi Pengerjaan
@@ -284,58 +270,84 @@
                             <p class="text-xs text-navy-500 mt-2">Klik untuk pilih, klik lagi untuk batal.</p>
                         </div>
 
-                        {{-- ITEM SEARCHABLE --}}
+                        {{-- ITEM SEARCHABLE + TOMBOL --}}
                         <div>
                             <label class="block text-xs font-semibold text-navy-300 uppercase tracking-wider mb-2">
                                 Item <span class="text-red-400">*</span>
                             </label>
-                            <div x-data="searchable({
-                                items: @js($itemOptions),
-                                selected: '',
-                                name: 'item_selector',
-                                onChange: (id, data) => {
-                                    selectedItemType = data.type || '';
-                                    selectedItemId = data.id || '';
-                                    onItemChange(data);
-                                }
-                            })" class="relative">
-                                <div x-ref="trigger" @click="toggle()"
-                                     class="w-full px-3 py-2.5 bg-navy-950 border border-navy-700 rounded-lg text-sm text-white cursor-pointer flex items-center justify-between"
-                                     :class="open && 'border-gold-500 ring-2 ring-gold-500/20'">
-                                    <span x-show="selectedLabel" x-text="selectedLabel" class="truncate"></span>
-                                    <span x-show="!selectedLabel" class="text-navy-500">-- Pilih Material / Sub-Assembly --</span>
-                                    <svg class="w-4 h-4 text-navy-500 flex-shrink-0" :class="open && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                                    </svg>
+                            <div class="flex gap-2 items-stretch">
+                                <div class="flex-1">
+                                    <div x-data="searchable({
+                                        items: @js($itemOptions),
+                                        selected: '',
+                                        name: 'item_selector',
+                                        onChange: (id, data) => {
+                                            selectedItemType = data.type || '';
+                                            selectedItemId = data.id || '';
+                                            onItemChange(data);
+                                        }
+                                    })" class="relative">
+                                        <div x-ref="trigger" @click="toggle()"
+                                             class="w-full px-3 py-2.5 bg-navy-950 border border-navy-700 rounded-lg text-sm text-white cursor-pointer flex items-center justify-between"
+                                             :class="open && 'border-gold-500 ring-2 ring-gold-500/20'">
+                                            <span x-show="selectedLabel" x-text="selectedLabel" class="truncate"></span>
+                                            <span x-show="!selectedLabel" class="text-navy-500">-- Pilih Material / Sub-Assembly --</span>
+                                            <svg class="w-4 h-4 text-navy-500 flex-shrink-0" :class="open && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                            </svg>
+                                        </div>
+
+                                        <template x-teleport="body">
+                                            <div x-show="open" x-cloak :style="dropdownStyle"
+                                                 class="bg-navy-800 border border-navy-700 rounded-lg shadow-xl overflow-hidden"
+                                                 @click.away="open = false">
+                                                <div class="p-2 border-b border-navy-700">
+                                                    <input type="text" x-model="search" :data-search-input="name"
+                                                           @keydown.arrow-down.prevent="highlightNext()"
+                                                           @keydown.arrow-up.prevent="highlightPrev()"
+                                                           @keydown.enter.prevent="selectHighlighted()"
+                                                           @keydown.escape="open = false"
+                                                           placeholder="Cari material / sub-assembly..."
+                                                           class="w-full px-3 py-2 bg-navy-950 border border-navy-700 rounded text-sm text-white placeholder-navy-500 focus:border-gold-500 focus:ring-0 focus:outline-none">
+                                                </div>
+                                                <div class="max-h-64 overflow-y-auto">
+                                                    <template x-for="(opt, idx) in filteredItems" :key="opt.id">
+                                                        <div @click="select(opt)" @mouseenter="highlighted = idx"
+                                                             :data-option-index="idx"
+                                                             class="px-3 py-2 text-sm cursor-pointer"
+                                                             :class="highlighted === idx ? 'bg-gold-500 text-navy-900' : 'text-white hover:bg-navy-700'"
+                                                             x-text="opt.label"></div>
+                                                    </template>
+                                                    <template x-if="filteredItems.length === 0">
+                                                        <div class="px-3 py-4 text-center text-sm text-navy-500">Tidak ada hasil</div>
+                                                    </template>
+                                                </div>
+                                            </div>
+                                        </template>
+                                    </div>
                                 </div>
 
-                                <template x-teleport="body">
-                                    <div x-show="open" x-cloak :style="dropdownStyle"
-                                         class="bg-navy-800 border border-navy-700 rounded-lg shadow-xl overflow-hidden"
-                                         @click.away="open = false">
-                                        <div class="p-2 border-b border-navy-700">
-                                            <input type="text" x-model="search" :data-search-input="name"
-                                                   @keydown.arrow-down.prevent="highlightNext()"
-                                                   @keydown.arrow-up.prevent="highlightPrev()"
-                                                   @keydown.enter.prevent="selectHighlighted()"
-                                                   @keydown.escape="open = false"
-                                                   placeholder="Cari material / sub-assembly..."
-                                                   class="w-full px-3 py-2 bg-navy-950 border border-navy-700 rounded text-sm text-white placeholder-navy-500 focus:border-gold-500 focus:ring-0 focus:outline-none">
-                                        </div>
-                                        <div class="max-h-64 overflow-y-auto">
-                                            <template x-for="(opt, idx) in filteredItems" :key="opt.id">
-                                                <div @click="select(opt)" @mouseenter="highlighted = idx"
-                                                     :data-option-index="idx"
-                                                     class="px-3 py-2 text-sm cursor-pointer"
-                                                     :class="highlighted === idx ? 'bg-gold-500 text-navy-900' : 'text-white hover:bg-navy-700'"
-                                                     x-text="opt.label"></div>
-                                            </template>
-                                            <template x-if="filteredItems.length === 0">
-                                                <div class="px-3 py-4 text-center text-sm text-navy-500">Tidak ada hasil</div>
-                                            </template>
-                                        </div>
-                                    </div>
-                                </template>
+                                {{-- Tombol + Material Baru --}}
+                                <button type="button" 
+                                        @click="openQuickMaterialModal = true"
+                                        class="px-3 py-2.5 bg-gold-500/20 text-gold-400 border border-gold-500/30 rounded-lg text-xs font-semibold hover:bg-gold-500/30 transition whitespace-nowrap flex items-center gap-1"
+                                        title="Tambah material baru tanpa keluar halaman">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
+                                    </svg>
+                                    Material
+                                </button>
+
+                                {{-- Tombol + Sub-Assembly (tab baru) --}}
+                                <a href="{{ route('master.products.create') }}" 
+                                   target="_blank"
+                                   class="px-3 py-2.5 bg-navy-800 text-navy-300 border border-navy-700 rounded-lg text-xs font-semibold hover:text-gold-500 hover:border-gold-500/50 transition whitespace-nowrap flex items-center gap-1"
+                                   title="Buat sub-assembly baru di tab baru">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
+                                    </svg>
+                                    Sub-Assembly
+                                </a>
                             </div>
 
                             {{-- INFO ITEM TERPILIH --}}
@@ -344,6 +356,10 @@
                                     <span>Tipe: <span class="text-navy-200" x-text="selectedItemType === 'material' ? 'Material' : 'Sub-Assembly'"></span></span>
                                     <span>Satuan beli: <span class="text-navy-200" x-text="selectedItem?.unit || '-'"></span></span>
                                     <span>Costing: <span class="text-gold-500" x-text="selectedItem?.costing_method || '-'"></span></span>
+                                </div>
+                                <div x-show="selectedItem?.spesifikasi" class="mt-1 pt-1 border-t border-navy-800 text-navy-400">
+                                    <span class="text-[10px] uppercase tracking-wider">Spesifikasi Material:</span>
+                                    <p class="text-navy-300 mt-0.5" x-text="selectedItem?.spesifikasi"></p>
                                 </div>
                             </div>
                         </div>
@@ -377,6 +393,15 @@
                                             <option value="lusin">lusin</option>
                                             <option value="rim">rim</option>
                                         </optgroup>
+                                        <optgroup label="Kemasan">
+                                            <option value="lembar">lembar</option>
+                                            <option value="batang">batang</option>
+                                            <option value="roll">roll</option>
+                                            <option value="kaleng">kaleng</option>
+                                            <option value="botol">botol</option>
+                                            <option value="karung">karung</option>
+                                            <option value="drum">drum</option>
+                                        </optgroup>
                                         <optgroup label="Panjang">
                                             <option value="mm">mm</option>
                                             <option value="cm">cm</option>
@@ -391,18 +416,7 @@
                                             <option value="ml">ml</option>
                                             <option value="liter">liter</option>
                                         </optgroup>
-                                        <optgroup label="Area">
-                                            <option value="mm2">mm²</option>
-                                            <option value="cm2">cm²</option>
-                                            <option value="m2">m²</option>
-                                        </optgroup>
-                                        <optgroup label="Volume 3D">
-                                            <option value="mm3">mm³</option>
-                                            <option value="cm3">cm³</option>
-                                            <option value="m3">m³</option>
-                                        </optgroup>
                                     </select>
-                                    {{-- Tombol reset ke auto-fill --}}
                                     <button type="button"
                                             x-show="autoFilledUnit && unitValue !== selectedItem?.unit"
                                             @click="unitValue = selectedItem?.unit"
@@ -437,7 +451,7 @@
 
                         {{-- DIMENSI PAKAI --}}
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                            <template x-if="needsArea || needsVolume || needsLength">
+                            <template x-if="needsArea || needsLength || needsVolumeKotak">
                                 <div>
                                     <x-atelier.input 
                                         name="panjang_pakai" 
@@ -451,7 +465,7 @@
                                 </div>
                             </template>
 
-                            <template x-if="needsArea || needsVolume">
+                            <template x-if="needsArea || needsVolumeKotak">
                                 <div>
                                     <x-atelier.input 
                                         name="lebar_pakai" 
@@ -465,7 +479,7 @@
                                 </div>
                             </template>
 
-                            <template x-if="needsVolume">
+                            <template x-if="needsVolumeKotak">
                                 <div>
                                     <x-atelier.input 
                                         name="tinggi_pakai" 
@@ -475,6 +489,21 @@
                                         min="0"
                                         :value="old('tinggi_pakai')" 
                                         placeholder="8"
+                                    />
+                                </div>
+                            </template>
+
+                            <template x-if="needsVolumeCair">
+                                <div class="md:col-span-2">
+                                    <x-atelier.input 
+                                        name="volume_pakai" 
+                                        label="Volume Pakai (ml)" 
+                                        type="number" 
+                                        step="0.01" 
+                                        min="0"
+                                        :value="old('volume_pakai')" 
+                                        placeholder="50"
+                                        hint="Volume pakai dalam ml. Contoh: 50 ml cat"
                                     />
                                 </div>
                             </template>
@@ -662,6 +691,27 @@
                 unitValue: '',
                 autoFilledUnit: false,
 
+                // Quick Material Modal State
+                openQuickMaterialModal: false,
+                savingQuickMaterial: false,
+                quickMaterialError: '',
+                quickMaterial: {
+                    nama: '',
+                    kode_bahan: '',
+                    category: '',
+                    unit: '',
+                    costing_method: 'per_unit',
+                    volume_type: 'kotak',
+                    panjang_standar: '',
+                    lebar_standar: '',
+                    tinggi_standar: '',
+                    berat_standar: '',
+                    volume_standar: '',
+                    price: '',
+                    yield_percent: 100,
+                    location: '',
+                },
+
                 // ============ EVENTS ============
                 onItemChange(data) {
                     this.selectedItem = data;
@@ -673,6 +723,64 @@
                     } else {
                         this.autoFilledUnit = false;
                     }
+
+                    // Auto-fill spesifikasi
+                    if (data.spesifikasi) {
+                        const specInput = document.querySelector('textarea[name="spesifikasi"]');
+                        if (specInput && !specInput.value) {
+                            specInput.value = data.spesifikasi;
+                        }
+                    }
+                },
+
+                // ============ QUICK MATERIAL ============
+                async saveQuickMaterial() {
+                    this.quickMaterialError = '';
+                    this.savingQuickMaterial = true;
+
+                    try {
+                        const response = await fetch('{{ route('master.materials.quick-store') }}', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                            },
+                            body: JSON.stringify(this.quickMaterial),
+                        });
+
+                        const data = await response.json();
+
+                        if (data.success) {
+                            // Auto-select material baru
+                            this.selectedItemType = 'material';
+                            this.selectedItemId = data.material.id;
+                            this.selectedItem = data.material;
+
+                            // Auto-fill satuan
+                            this.unitValue = data.material.unit || '';
+                            this.autoFilledUnit = !!data.material.unit;
+
+                            // Tutup modal
+                            this.openQuickMaterialModal = false;
+
+                            // Reset form
+                            this.quickMaterial = {
+                                nama: '', kode_bahan: '', category: '', unit: '',
+                                costing_method: 'per_unit', volume_type: 'kotak',
+                                panjang_standar: '', lebar_standar: '', tinggi_standar: '',
+                                berat_standar: '', volume_standar: '',
+                                price: '', yield_percent: 100, location: '',
+                            };
+
+                        } else {
+                            this.quickMaterialError = data.message || 'Gagal simpan material.';
+                        }
+                    } catch (error) {
+                        this.quickMaterialError = 'Gagal koneksi ke server: ' + error.message;
+                    } finally {
+                        this.savingQuickMaterial = false;
+                    }
                 },
 
                 // ============ COMPUTED ============
@@ -681,16 +789,25 @@
                     return this.selectedItem?.costing_method || 'per_unit';
                 },
 
+                get volumeType() {
+                    if (this.selectedItemType !== 'material') return null;
+                    return this.selectedItem?.volume_type || null;
+                },
+
                 get needsDimension() {
                     return ['per_area', 'per_volume', 'per_length', 'per_weight'].includes(this.costingMethod);
                 },
 
                 get needsArea() {
-                    return ['per_area', 'per_volume'].includes(this.costingMethod);
+                    return ['per_area'].includes(this.costingMethod);
                 },
 
-                get needsVolume() {
-                    return this.costingMethod === 'per_volume';
+                get needsVolumeCair() {
+                    return this.costingMethod === 'per_volume' && this.volumeType === 'cair';
+                },
+
+                get needsVolumeKotak() {
+                    return this.costingMethod === 'per_volume' && this.volumeType !== 'cair';
                 },
 
                 get needsLength() {
@@ -702,16 +819,200 @@
                 },
 
                 get dimensionHint() {
-                    return {
-                        per_area: 'Isi Panjang & Lebar potongan (mm).',
-                        per_volume: 'Isi Panjang, Lebar & Tinggi potongan (mm).',
-                        per_length: 'Isi Panjang potongan (mm).',
-                        per_weight: 'Isi Berat pakai (gram).',
-                    }[this.costingMethod] || '';
+                    if (this.costingMethod === 'per_area') return 'Isi Panjang & Lebar potongan (mm).';
+                    if (this.costingMethod === 'per_volume' && this.volumeType === 'cair') return 'Isi Volume pakai (ml).';
+                    if (this.costingMethod === 'per_volume') return 'Isi Panjang, Lebar & Tinggi potongan (mm).';
+                    if (this.costingMethod === 'per_length') return 'Isi Panjang potongan (mm).';
+                    if (this.costingMethod === 'per_weight') return 'Isi Berat pakai (gram).';
+                    return '';
                 },
             }
         }
     </script>
     @endpush
+
+    {{-- MODAL: TAMBAH MATERIAL BARU --}}
+    <div x-data x-show="$data.openQuickMaterialModal" x-cloak
+         class="fixed inset-0 z-50 flex items-center justify-center bg-navy-950/80 backdrop-blur-sm p-4"
+         @click.self="$data.openQuickMaterialModal = false">
+        <div class="bg-navy-900 border border-navy-800 rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl">
+            <div class="p-6">
+
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <h3 class="font-serif text-xl font-bold text-white">Tambah Material Baru</h3>
+                        <p class="text-xs text-navy-500 mt-1">Material akan otomatis dipilih setelah disimpan.</p>
+                    </div>
+                    <button type="button" @click="$data.openQuickMaterialModal = false" class="text-navy-500 hover:text-white">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+
+                <div x-show="$data.quickMaterialError" x-cloak
+                     class="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-sm text-red-400"
+                     x-text="$data.quickMaterialError"></div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                    <div class="md:col-span-2">
+                        <label class="block text-xs font-semibold text-navy-300 uppercase tracking-wider mb-2">
+                            Nama Material <span class="text-red-400">*</span>
+                        </label>
+                        <input type="text" x-model="$data.quickMaterial.nama"
+                               placeholder="Contoh: Manual Book - Palu PAUD"
+                               class="w-full px-3 py-2.5 bg-navy-950 border border-navy-700 rounded-lg text-sm text-white placeholder-navy-500 focus:border-gold-500 focus:ring-2 focus:ring-gold-500/20 focus:outline-none transition">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-navy-300 uppercase tracking-wider mb-2">Kode Internal</label>
+                        <input type="text" x-model="$data.quickMaterial.kode_bahan" placeholder="A8-18-0"
+                               class="w-full px-3 py-2.5 bg-navy-950 border border-navy-700 rounded-lg text-sm text-white placeholder-navy-500 focus:border-gold-500 focus:ring-2 focus:ring-gold-500/20 focus:outline-none transition">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-navy-300 uppercase tracking-wider mb-2">Kategori</label>
+                        <input type="text" x-model="$data.quickMaterial.category" placeholder="Kayu, Cat, Besi"
+                               class="w-full px-3 py-2.5 bg-navy-950 border border-navy-700 rounded-lg text-sm text-white placeholder-navy-500 focus:border-gold-500 focus:ring-2 focus:ring-gold-500/20 focus:outline-none transition">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-navy-300 uppercase tracking-wider mb-2">
+                            Satuan Beli <span class="text-red-400">*</span>
+                        </label>
+                        <select x-model="$data.quickMaterial.unit"
+                                class="w-full px-3 py-2.5 bg-navy-950 border border-navy-700 rounded-lg text-sm text-white focus:border-gold-500 focus:ring-2 focus:ring-gold-500/20 focus:outline-none transition">
+                            <option value="">-- Pilih --</option>
+                            <optgroup label="Hitung">
+                                <option value="pcs">pcs</option>
+                                <option value="unit">unit</option>
+                                <option value="set">set</option>
+                                <option value="lusin">lusin</option>
+                            </optgroup>
+                            <optgroup label="Kemasan">
+                                <option value="lembar">lembar</option>
+                                <option value="batang">batang</option>
+                                <option value="roll">roll</option>
+                                <option value="kaleng">kaleng</option>
+                                <option value="botol">botol</option>
+                                <option value="karung">karung</option>
+                                <option value="drum">drum</option>
+                            </optgroup>
+                            <optgroup label="Ukur">
+                                <option value="mm">mm</option>
+                                <option value="cm">cm</option>
+                                <option value="m">m</option>
+                                <option value="gram">gram</option>
+                                <option value="kg">kg</option>
+                                <option value="ml">ml</option>
+                                <option value="liter">liter</option>
+                            </optgroup>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-navy-300 uppercase tracking-wider mb-2">
+                            Costing Method <span class="text-red-400">*</span>
+                        </label>
+                        <select x-model="$data.quickMaterial.costing_method"
+                                class="w-full px-3 py-2.5 bg-navy-950 border border-navy-700 rounded-lg text-sm text-white focus:border-gold-500 focus:ring-2 focus:ring-gold-500/20 focus:outline-none transition">
+                            <option value="per_unit">Per Unit</option>
+                            <option value="per_area">Per Area</option>
+                            <option value="per_volume">Per Volume</option>
+                            <option value="per_length">Per Length</option>
+                            <option value="per_weight">Per Weight</option>
+                        </select>
+                    </div>
+
+                    <div x-show="$data.quickMaterial.costing_method === 'per_volume'" class="md:col-span-2">
+                        <label class="block text-xs font-semibold text-navy-300 uppercase tracking-wider mb-2">
+                            Jenis Volume <span class="text-red-400">*</span>
+                        </label>
+                        <select x-model="$data.quickMaterial.volume_type"
+                                class="w-full px-3 py-2.5 bg-navy-950 border border-navy-700 rounded-lg text-sm text-white focus:border-gold-500 focus:ring-2 focus:ring-gold-500/20 focus:outline-none transition">
+                            <option value="kotak">Volume Kotak (P × L × T)</option>
+                            <option value="cair">Volume Cair (ml)</option>
+                        </select>
+                    </div>
+
+                    <template x-if="['per_area', 'per_length'].includes($data.quickMaterial.costing_method) || ($data.quickMaterial.costing_method === 'per_volume' && $data.quickMaterial.volume_type === 'kotak')">
+                        <div>
+                            <label class="block text-xs font-semibold text-navy-300 uppercase tracking-wider mb-2">Panjang (mm)</label>
+                            <input type="number" x-model="$data.quickMaterial.panjang_standar" step="0.01" min="0" placeholder="2400"
+                                   class="w-full px-3 py-2.5 bg-navy-950 border border-navy-700 rounded-lg text-sm text-white placeholder-navy-500 focus:border-gold-500 focus:ring-2 focus:ring-gold-500/20 focus:outline-none transition">
+                        </div>
+                    </template>
+
+                    <template x-if="$data.quickMaterial.costing_method === 'per_area' || ($data.quickMaterial.costing_method === 'per_volume' && $data.quickMaterial.volume_type === 'kotak')">
+                        <div>
+                            <label class="block text-xs font-semibold text-navy-300 uppercase tracking-wider mb-2">Lebar (mm)</label>
+                            <input type="number" x-model="$data.quickMaterial.lebar_standar" step="0.01" min="0" placeholder="1200"
+                                   class="w-full px-3 py-2.5 bg-navy-950 border border-navy-700 rounded-lg text-sm text-white placeholder-navy-500 focus:border-gold-500 focus:ring-2 focus:ring-gold-500/20 focus:outline-none transition">
+                        </div>
+                    </template>
+
+                    <template x-if="$data.quickMaterial.costing_method === 'per_volume' && $data.quickMaterial.volume_type === 'kotak'">
+                        <div>
+                            <label class="block text-xs font-semibold text-navy-300 uppercase tracking-wider mb-2">Tinggi/Tebal (mm)</label>
+                            <input type="number" x-model="$data.quickMaterial.tinggi_standar" step="0.01" min="0" placeholder="18"
+                                   class="w-full px-3 py-2.5 bg-navy-950 border border-navy-700 rounded-lg text-sm text-white placeholder-navy-500 focus:border-gold-500 focus:ring-2 focus:ring-gold-500/20 focus:outline-none transition">
+                        </div>
+                    </template>
+
+                    <template x-if="$data.quickMaterial.costing_method === 'per_weight'">
+                        <div>
+                            <label class="block text-xs font-semibold text-navy-300 uppercase tracking-wider mb-2">Berat (gram)</label>
+                            <input type="number" x-model="$data.quickMaterial.berat_standar" step="0.01" min="0" placeholder="1000"
+                                   class="w-full px-3 py-2.5 bg-navy-950 border border-navy-700 rounded-lg text-sm text-white placeholder-navy-500 focus:border-gold-500 focus:ring-2 focus:ring-gold-500/20 focus:outline-none transition">
+                        </div>
+                    </template>
+
+                    <template x-if="$data.quickMaterial.costing_method === 'per_volume' && $data.quickMaterial.volume_type === 'cair'">
+                        <div>
+                            <label class="block text-xs font-semibold text-navy-300 uppercase tracking-wider mb-2">Volume (ml)</label>
+                            <input type="number" x-model="$data.quickMaterial.volume_standar" step="0.01" min="0" placeholder="5000"
+                                   class="w-full px-3 py-2.5 bg-navy-950 border border-navy-700 rounded-lg text-sm text-white placeholder-navy-500 focus:border-gold-500 focus:ring-2 focus:ring-gold-500/20 focus:outline-none transition">
+                        </div>
+                    </template>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-navy-300 uppercase tracking-wider mb-2">
+                            Harga per Satuan (Rp) <span class="text-red-400">*</span>
+                        </label>
+                        <input type="number" x-model="$data.quickMaterial.price" step="0.01" min="0" placeholder="500000"
+                               class="w-full px-3 py-2.5 bg-navy-950 border border-navy-700 rounded-lg text-sm text-white placeholder-navy-500 focus:border-gold-500 focus:ring-2 focus:ring-gold-500/20 focus:outline-none transition">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-navy-300 uppercase tracking-wider mb-2">Yield (%)</label>
+                        <input type="number" x-model="$data.quickMaterial.yield_percent" step="0.01" min="0" max="100" placeholder="100"
+                               class="w-full px-3 py-2.5 bg-navy-950 border border-navy-700 rounded-lg text-sm text-white placeholder-navy-500 focus:border-gold-500 focus:ring-2 focus:ring-gold-500/20 focus:outline-none transition">
+                    </div>
+
+                    <div class="md:col-span-2">
+                        <label class="block text-xs font-semibold text-navy-300 uppercase tracking-wider mb-2">Lokasi Default</label>
+                        <input type="text" x-model="$data.quickMaterial.location" placeholder="Rak A-01"
+                               class="w-full px-3 py-2.5 bg-navy-950 border border-navy-700 rounded-lg text-sm text-white placeholder-navy-500 focus:border-gold-500 focus:ring-2 focus:ring-gold-500/20 focus:outline-none transition">
+                    </div>
+
+                </div>
+
+                <div class="flex justify-end gap-3 mt-6 pt-6 border-t border-navy-800">
+                    <button type="button" @click="$data.openQuickMaterialModal = false"
+                            class="px-4 py-2 bg-navy-800 text-navy-300 border border-navy-700 rounded-lg text-sm font-semibold hover:text-white transition">
+                        Batal
+                    </button>
+                    <button type="button" @click="$data.saveQuickMaterial()"
+                            :disabled="$data.savingQuickMaterial"
+                            class="px-4 py-2 bg-gold-500 text-navy-900 rounded-lg text-sm font-bold hover:bg-gold-400 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                        <span x-show="!$data.savingQuickMaterial">Simpan & Pilih</span>
+                        <span x-show="$data.savingQuickMaterial">Menyimpan...</span>
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
 
 </x-app-layout>

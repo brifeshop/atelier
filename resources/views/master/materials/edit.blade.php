@@ -26,7 +26,7 @@
             <x-atelier.card title="Informasi Dasar" :brackets="true">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <x-atelier.input name="kode" label="Kode Sistem" :value="$item->kode" required />
-                    <x-atelier.input name="kode_bahan" label="Kode Internal" :value="$item->kode_bahan" placeholder="A8-18-0" />
+                    <x-atelier.input name="kode_bahan" label="Kode Internal" :value="$item->kode_bahan" placeholder="A8-18-0" hint="Kode internal perusahaan (opsional)" />
                     <div class="md:col-span-2">
                         <x-atelier.input name="nama" label="Nama Material" :value="$item->nama" required />
                     </div>
@@ -45,16 +45,29 @@
                     <label class="block text-xs font-semibold text-navy-300 uppercase tracking-wider mb-2">
                         Metode Costing <span class="text-red-400">*</span>
                     </label>
-                    <select name="costing_method" required x-model="costingMethod"
+                    <select name="costing_method" required x-model="costingMethod" @change="onMethodChange()"
                             class="w-full px-3 py-2.5 bg-navy-950 border border-navy-700 rounded-lg text-sm text-white focus:border-gold-500 focus:ring-2 focus:ring-gold-500/20 focus:outline-none transition">
-                        <option value="per_unit">Per Unit</option>
-                        <option value="per_area">Per Area (Luas)</option>
-                        <option value="per_volume">Per Volume</option>
-                        <option value="per_length">Per Panjang</option>
-                        <option value="per_weight">Per Berat</option>
+                        <option value="per_unit">Per Unit — Beli pcs, pakai pcs</option>
+                        <option value="per_area">Per Area — Beli lembar, pakai luas (mm²)</option>
+                        <option value="per_volume">Per Volume — Beli batang/cair, pakai volume</option>
+                        <option value="per_length">Per Panjang — Beli roll, pakai panjang (mm)</option>
+                        <option value="per_weight">Per Berat — Beli karung, pakai berat (gram)</option>
                     </select>
                 </div>
 
+                {{-- VOLUME TYPE --}}
+                <div x-show="costingMethod === 'per_volume'" x-cloak class="mt-4">
+                    <label class="block text-xs font-semibold text-navy-300 uppercase tracking-wider mb-2">
+                        Jenis Volume <span class="text-red-400">*</span>
+                    </label>
+                    <select name="volume_type" x-model="volumeType" :required="costingMethod === 'per_volume'"
+                            class="w-full px-3 py-2.5 bg-navy-950 border border-navy-700 rounded-lg text-sm text-white focus:border-gold-500 focus:ring-2 focus:ring-gold-500/20 focus:outline-none transition">
+                        <option value="kotak">Volume Kotak (P × L × T) — untuk balok, batang</option>
+                        <option value="cair">Volume Cair (ml) — untuk cat, varnish, tinta, oli</option>
+                    </select>
+                </div>
+
+                {{-- INFO --}}
                 <div class="mt-4 p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg">
                     <div class="flex gap-3">
                         <svg class="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -72,24 +85,34 @@
             {{-- DIMENSI STANDAR --}}
             <x-atelier.card x-show="needsDimension" x-cloak title="Dimensi Standar" :brackets="true">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-                    <template x-if="costingMethod === 'per_area' || costingMethod === 'per_volume' || costingMethod === 'per_length'">
+
+                    <template x-if="costingMethod === 'per_area' || costingMethod === 'per_length' || (costingMethod === 'per_volume' && volumeType === 'kotak')">
                         <div>
                             <x-atelier.input name="panjang_standar" label="Panjang (mm)" type="number" step="0.01" min="0" :value="$item->panjang_standar" />
                         </div>
                     </template>
-                    <template x-if="costingMethod === 'per_area' || costingMethod === 'per_volume'">
+
+                    <template x-if="costingMethod === 'per_area' || (costingMethod === 'per_volume' && volumeType === 'kotak')">
                         <div>
                             <x-atelier.input name="lebar_standar" label="Lebar (mm)" type="number" step="0.01" min="0" :value="$item->lebar_standar" />
                         </div>
                     </template>
-                    <template x-if="costingMethod === 'per_volume'">
+
+                    <template x-if="costingMethod === 'per_volume' && volumeType === 'kotak'">
                         <div>
                             <x-atelier.input name="tinggi_standar" label="Tinggi/Tebal (mm)" type="number" step="0.01" min="0" :value="$item->tinggi_standar" />
                         </div>
                     </template>
+
                     <template x-if="costingMethod === 'per_weight'">
                         <div>
                             <x-atelier.input name="berat_standar" label="Berat (gram)" type="number" step="0.01" min="0" :value="$item->berat_standar" />
+                        </div>
+                    </template>
+
+                    <template x-if="costingMethod === 'per_volume' && volumeType === 'cair'">
+                        <div class="md:col-span-3">
+                            <x-atelier.input name="volume_standar" label="Volume Standar (ml)" type="number" step="0.01" min="0" :value="$item->volume_standar" hint="Contoh: 5 liter = 5.000 ml" />
                         </div>
                     </template>
                 </div>
@@ -139,6 +162,7 @@
         function materialForm() {
             return {
                 costingMethod: '{{ old('costing_method', $item->costing_method ?? 'per_unit') }}',
+                volumeType: '{{ old('volume_type', $item->volume_type ?? 'kotak') }}',
 
                 get needsDimension() {
                     return ['per_area', 'per_volume', 'per_length', 'per_weight'].includes(this.costingMethod);
@@ -148,11 +172,17 @@
                     const info = {
                         per_unit: { title: 'Per Unit', description: 'Beli pcs, pakai pcs', example: 'Contoh: Sekrup Rp 500/pcs' },
                         per_area: { title: 'Per Area', description: 'Beli lembar, pakai luas', example: 'Contoh: MDF Rp 500K/lembar (2400×1200)' },
-                        per_volume: { title: 'Per Volume', description: 'Beli batang, pakai volume', example: 'Contoh: Kayu Rp 200K/batang (100×100×4000)' },
+                        per_volume: { title: 'Per Volume', description: 'Beli batang/cair, pakai volume', example: 'Cair: Varnish Rp 500K/5 liter' },
                         per_length: { title: 'Per Panjang', description: 'Beli roll, pakai panjang', example: 'Contoh: Kabel Rp 200K/roll (100 m)' },
                         per_weight: { title: 'Per Berat', description: 'Beli karung, pakai berat', example: 'Contoh: Tepung Rp 300K/karung (25 kg)' },
                     };
                     return info[this.costingMethod] || info.per_unit;
+                },
+
+                onMethodChange() {
+                    if (this.costingMethod !== 'per_volume') {
+                        this.volumeType = 'kotak';
+                    }
                 },
             }
         }

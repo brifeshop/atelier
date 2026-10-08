@@ -5,20 +5,38 @@
 
     <div class="p-6 lg:p-8 space-y-6 grid-bg">
 
-        <x-atelier.page-header
-            segment="M2"
-            title="Master Material"
-            subtitle="Daftar semua bahan baku"
-            action="Tambah Material"
-            :actionUrl="route('master.materials.create')"
-        />
+        {{-- HEADER DENGAN TOMBOL --}}
+        <div class="flex items-start justify-between flex-wrap gap-4">
+            <x-atelier.page-header
+                segment="M2"
+                title="Master Material"
+                subtitle="Daftar semua bahan baku"
+            />
+            <div class="flex gap-2">
+                <x-atelier.button :href="route('master.materials.import')" variant="secondary">
+                    ⬆️ Import CSV
+                </x-atelier.button>
+                <x-atelier.button :href="route('master.materials.create')" variant="primary">
+                    + Tambah Material
+                </x-atelier.button>
+            </div>
+        </div>
 
+        {{-- ALERT SUCCESS --}}
         @if(session('success'))
             <div class="bg-green-500/10 border border-green-500/30 text-green-400 px-4 py-3 rounded-lg text-sm">
                 {{ session('success') }}
             </div>
         @endif
 
+        {{-- ALERT ERROR — pakai {!! !!} supaya HTML render --}}
+        @if(session('error'))
+            <div class="bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 rounded-lg text-sm">
+                {!! session('error') !!}
+            </div>
+        @endif
+
+        {{-- CARD DENGAN FILTER & TABEL --}}
         <x-atelier.card :brackets="true" padding="p-0">
             <div class="px-5 py-4 border-b border-navy-800">
                 <form method="GET" action="{{ route('master.materials.index') }}" class="flex gap-3 flex-wrap">
@@ -138,11 +156,27 @@
                                         <div class="flex items-center justify-end gap-2">
                                             <x-atelier.button :href="route('master.materials.show', $material)" variant="ghost" size="sm">Lihat</x-atelier.button>
                                             <x-atelier.button :href="route('master.materials.edit', $material)" variant="secondary" size="sm">Edit</x-atelier.button>
-                                            <form method="POST" action="{{ route('master.materials.destroy', $material) }}" onsubmit="return confirm('Yakin hapus material ini?')" class="inline">
-                                                @csrf
-                                                @method('DELETE')
-                                                <x-atelier.button type="submit" variant="danger" size="sm">Hapus</x-atelier.button>
-                                            </form>
+
+                                            @php
+                                                $isUsedInBom = \App\Models\Engineering\BomItem::where('item_type', 'material')->where('item_id', $material->id)->exists();
+                                                $isUsedInWo = \App\Models\Production\WorkOrderMaterial::where('material_id', $material->id)->exists();
+                                                $canDelete = !$isUsedInBom && !$isUsedInWo;
+                                            @endphp
+
+                                            @if($canDelete)
+                                                <form method="POST" action="{{ route('master.materials.destroy', $material) }}" onsubmit="return confirm('Yakin hapus material ini?')" class="inline">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <x-atelier.button type="submit" variant="danger" size="sm">Hapus</x-atelier.button>
+                                                </form>
+                                            @else
+                                                <button type="button"
+                                                        disabled
+                                                        title="Material masih dipakai di BOM atau Work Order. Nonaktifkan saja untuk menyembunyikannya."
+                                                        class="px-3 py-1.5 text-xs font-semibold text-navy-500 bg-navy-800 border border-navy-700 rounded-lg cursor-not-allowed">
+                                                    Dipakai
+                                                </button>
+                                            @endif
                                         </div>
                                     </td>
                                 </tr>
