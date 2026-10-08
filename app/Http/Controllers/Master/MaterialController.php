@@ -15,22 +15,38 @@ class MaterialController extends BaseCrudController
     protected string $routePrefix = 'master.materials';
     protected string $title = 'Material';
 
-    protected array $searchable = ['kode', 'nama', 'category', 'unit', 'location'];
+    // ← TAMBAH kode_bahan & spesifikasi
+    protected array $searchable = ['kode', 'kode_bahan', 'nama', 'spesifikasi', 'category', 'unit', 'location'];
 
     protected array $validationRules = [
-        'kode' => 'required|string|max:50|unique:materials,kode',
-        'nama' => 'required|string|max:255',
-        'category' => 'nullable|string|max:100',
-        'unit' => 'required|string|max:20',
-        'price' => 'nullable|numeric|min:0',
-        'min_stock' => 'nullable|numeric|min:0',
-        'max_stock' => 'nullable|numeric|min:0',
-        'current_stock' => 'nullable|numeric|min:0',
-        'supplier_id' => 'nullable|exists:suppliers,id',
-        'location' => 'nullable|string|max:100',
-        'notes' => 'nullable|string',
-        'photo' => 'nullable|image|max:2048',
-        'is_active' => 'boolean',
+        'kode'              => 'required|string|max:50|unique:materials,kode',
+        'kode_bahan'        => 'nullable|string|max:50',                       // ← TAMBAH
+        'nama'              => 'required|string|max:255',
+        'spesifikasi'       => 'nullable|string',                               // ← TAMBAH
+        'category'          => 'nullable|string|max:100',
+        'unit'              => 'required|string|max:20',
+
+        // ← DIMENSI STANDAR (untuk 5 costing method)
+        'panjang_standar'   => 'nullable|numeric|min:0',
+        'lebar_standar'     => 'nullable|numeric|min:0',
+        'tinggi_standar'    => 'nullable|numeric|min:0',
+        'berat_standar'     => 'nullable|numeric|min:0',
+        'volume_standar'    => 'nullable|numeric|min:0',
+
+        // ← COSTING
+        'costing_method'    => 'required|in:per_unit,per_area,per_volume,per_length,per_weight',
+        'base_unit'         => 'nullable|string|max:20',
+        'yield_percent'     => 'nullable|numeric|min:0|max:100',
+
+        'price'             => 'nullable|numeric|min:0',
+        'min_stock'         => 'nullable|numeric|min:0',
+        'max_stock'         => 'nullable|numeric|min:0',
+        'current_stock'     => 'nullable|numeric|min:0',
+        'supplier_id'       => 'nullable|exists:suppliers,id',
+        'location'          => 'nullable|string|max:100',
+        'notes'             => 'nullable|string',
+        'photo'             => 'nullable|image|max:2048',
+        'is_active'         => 'boolean',
     ];
 
     public function index(Request $request)
@@ -46,22 +62,27 @@ class MaterialController extends BaseCrudController
             });
         }
 
+        // Filter by costing method (bonus)
+        if ($request->filled('costing_method')) {
+            $query->where('costing_method', $request->costing_method);
+        }
+
         $items = $query->latest()->paginate(15);
 
         return view("{$this->viewPrefix}.index", [
-            'items' => $items,
-            'title' => $this->title,
-            'routePrefix' => $this->routePrefix,
+            'items'         => $items,
+            'title'         => $this->title,
+            'routePrefix'   => $this->routePrefix,
         ]);
     }
 
     public function create()
     {
         return view("{$this->viewPrefix}.create", [
-            'title' => $this->title,
-            'routePrefix' => $this->routePrefix,
+            'title'         => $this->title,
+            'routePrefix'   => $this->routePrefix,
             'generatedKode' => Material::generateKode(),
-            'suppliers' => Supplier::active()->orderBy('nama')->get(),
+            'suppliers'     => Supplier::active()->orderBy('nama')->get(),
         ]);
     }
 
@@ -82,7 +103,19 @@ class MaterialController extends BaseCrudController
             );
         }
 
-        unset($validated['photo']); // hapus field 'photo' dari array
+        unset($validated['photo']);
+
+        // Default values untuk costing
+        $validated['yield_percent'] = $validated['yield_percent'] ?? 100;
+
+        // Reset dimensi kalau costing_method = per_unit
+        if (($validated['costing_method'] ?? 'per_unit') === 'per_unit') {
+            $validated['panjang_standar'] = null;
+            $validated['lebar_standar'] = null;
+            $validated['tinggi_standar'] = null;
+            $validated['berat_standar'] = null;
+            $validated['volume_standar'] = null;
+        }
 
         $validated['is_active'] = $request->boolean('is_active', true);
 
@@ -98,10 +131,10 @@ class MaterialController extends BaseCrudController
         $item = Material::findOrFail($id);
 
         return view("{$this->viewPrefix}.edit", [
-            'item' => $item,
-            'title' => $this->title,
+            'item'        => $item,
+            'title'       => $this->title,
             'routePrefix' => $this->routePrefix,
-            'suppliers' => Supplier::active()->orderBy('nama')->get(),
+            'suppliers'   => Supplier::active()->orderBy('nama')->get(),
         ]);
     }
 
@@ -125,6 +158,18 @@ class MaterialController extends BaseCrudController
         }
 
         unset($validated['photo']);
+
+        // Default values untuk costing
+        $validated['yield_percent'] = $validated['yield_percent'] ?? 100;
+
+        // Reset dimensi kalau costing_method = per_unit
+        if (($validated['costing_method'] ?? 'per_unit') === 'per_unit') {
+            $validated['panjang_standar'] = null;
+            $validated['lebar_standar'] = null;
+            $validated['tinggi_standar'] = null;
+            $validated['berat_standar'] = null;
+            $validated['volume_standar'] = null;
+        }
 
         $validated['is_active'] = $request->boolean('is_active', true);
 

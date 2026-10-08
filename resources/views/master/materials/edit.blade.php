@@ -18,89 +18,100 @@
             </div>
         @endif
 
-        <form method="POST" action="{{ route('master.materials.update', $item) }}" enctype="multipart/form-data">
+        <form method="POST" action="{{ route('master.materials.update', $item) }}" x-data="materialForm()">
             @csrf
             @method('PUT')
 
-            {{-- FOTO --}}
-            <x-atelier.card title="Foto Material" subtitle="Opsional, max 2MB" :brackets="true">
-                <div class="flex items-start gap-6">
-                    <div class="flex-shrink-0">
-                        <img id="photo-preview"
-                             src="{{ $item->photo_url ?? 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22128%22 height=%22128%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23475569%22 stroke-width=%221.5%22%3E%3Crect x=%223%22 y=%223%22 width=%2218%22 height=%2218%22 rx=%222%22/%3E%3Ccircle cx=%228.5%22 cy=%228.5%22 r=%221.5%22/%3E%3Cpath d=%22M21 15l-5-5L5 21%22/%3E%3C/svg%3E' }}"
-                             class="w-32 h-32 object-cover rounded-lg border border-navy-700 bg-navy-950">
+            {{-- INFO DASAR --}}
+            <x-atelier.card title="Informasi Dasar" :brackets="true">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <x-atelier.input name="kode" label="Kode Sistem" :value="$item->kode" required />
+                    <x-atelier.input name="kode_bahan" label="Kode Internal" :value="$item->kode_bahan" placeholder="A8-18-0" />
+                    <div class="md:col-span-2">
+                        <x-atelier.input name="nama" label="Nama Material" :value="$item->nama" required />
                     </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-xs font-semibold text-navy-300 uppercase tracking-wider mb-2">Spesifikasi</label>
+                        <textarea name="spesifikasi" rows="2" class="w-full px-3 py-2.5 bg-navy-950 border border-navy-700 rounded-lg text-sm text-white placeholder-navy-500 focus:border-gold-500 focus:ring-2 focus:ring-gold-500/20 focus:outline-none transition">{{ old('spesifikasi', $item->spesifikasi) }}</textarea>
+                    </div>
+                    <x-atelier.input name="category" label="Kategori" :value="$item->category" />
+                    <x-atelier.input name="unit" label="Satuan Beli" :value="$item->unit" required />
+                </div>
+            </x-atelier.card>
 
-                    <div class="flex-1">
-                        <input type="file" name="photo" accept="image/*"
-                               onchange="previewPhoto(this)"
-                               class="w-full px-3 py-2 bg-navy-950 border border-navy-700 rounded-lg text-sm text-white file:mr-3 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-gold-500 file:text-navy-900 hover:file:bg-gold-400 cursor-pointer">
-                        <p class="text-xs text-navy-500 mt-2">Format: JPG, PNG, WEBP. Maksimal 2MB.</p>
+            {{-- COSTING METHOD --}}
+            <x-atelier.card title="Costing Method" :brackets="true">
+                <div>
+                    <label class="block text-xs font-semibold text-navy-300 uppercase tracking-wider mb-2">
+                        Metode Costing <span class="text-red-400">*</span>
+                    </label>
+                    <select name="costing_method" required x-model="costingMethod"
+                            class="w-full px-3 py-2.5 bg-navy-950 border border-navy-700 rounded-lg text-sm text-white focus:border-gold-500 focus:ring-2 focus:ring-gold-500/20 focus:outline-none transition">
+                        <option value="per_unit">Per Unit</option>
+                        <option value="per_area">Per Area (Luas)</option>
+                        <option value="per_volume">Per Volume</option>
+                        <option value="per_length">Per Panjang</option>
+                        <option value="per_weight">Per Berat</option>
+                    </select>
+                </div>
 
-                        @if($item->photo_path)
-                            <p class="text-xs text-green-400 mt-1">✓ Foto sudah ada. Upload baru untuk mengganti.</p>
-                        @endif
-
-                        <button type="button" onclick="resetPhoto()"
-                                class="mt-3 text-xs text-red-400 hover:text-red-300 transition">
-                            Reset preview
-                        </button>
+                <div class="mt-4 p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg">
+                    <div class="flex gap-3">
+                        <svg class="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <div class="text-xs text-blue-300">
+                            <p class="font-semibold mb-1" x-text="methodInfo.title"></p>
+                            <p class="text-blue-400" x-text="methodInfo.description"></p>
+                            <p class="text-blue-400 mt-1" x-text="methodInfo.example"></p>
+                        </div>
                     </div>
                 </div>
             </x-atelier.card>
 
-            {{-- INFORMASI MATERIAL --}}
-            <x-atelier.card title="Informasi Material" :brackets="true">
+            {{-- DIMENSI STANDAR --}}
+            <x-atelier.card x-show="needsDimension" x-cloak title="Dimensi Standar" :brackets="true">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                    <template x-if="costingMethod === 'per_area' || costingMethod === 'per_volume' || costingMethod === 'per_length'">
+                        <div>
+                            <x-atelier.input name="panjang_standar" label="Panjang (mm)" type="number" step="0.01" min="0" :value="$item->panjang_standar" />
+                        </div>
+                    </template>
+                    <template x-if="costingMethod === 'per_area' || costingMethod === 'per_volume'">
+                        <div>
+                            <x-atelier.input name="lebar_standar" label="Lebar (mm)" type="number" step="0.01" min="0" :value="$item->lebar_standar" />
+                        </div>
+                    </template>
+                    <template x-if="costingMethod === 'per_volume'">
+                        <div>
+                            <x-atelier.input name="tinggi_standar" label="Tinggi/Tebal (mm)" type="number" step="0.01" min="0" :value="$item->tinggi_standar" />
+                        </div>
+                    </template>
+                    <template x-if="costingMethod === 'per_weight'">
+                        <div>
+                            <x-atelier.input name="berat_standar" label="Berat (gram)" type="number" step="0.01" min="0" :value="$item->berat_standar" />
+                        </div>
+                    </template>
+                </div>
+            </x-atelier.card>
+
+            {{-- HARGA & YIELD --}}
+            <x-atelier.card title="Harga & Yield" :brackets="true">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    <x-atelier.input name="kode" label="Kode Material" :value="$item->kode" required />
-                    <x-atelier.input name="nama" label="Nama Material" :value="$item->nama" required />
-
-                    <div>
-                        <label class="block text-xs font-semibold text-navy-300 uppercase tracking-wider mb-2">Kategori</label>
-                        <select name="category" class="w-full px-3 py-2.5 bg-navy-950 border border-navy-700 rounded-lg text-sm text-white focus:border-gold-500 focus:ring-2 focus:ring-gold-500/20 focus:outline-none transition">
-                            <option value="">-- Pilih Kategori --</option>
-                            @foreach(['Raw Material', 'Consumable', 'Packaging', 'Spare Part', 'Lainnya'] as $cat)
-                                <option value="{{ $cat }}" @selected(old('category', $item->category) == $cat)>{{ $cat }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-semibold text-navy-300 uppercase tracking-wider mb-2">Satuan <span class="text-red-400">*</span></label>
-                        <select name="unit" required class="w-full px-3 py-2.5 bg-navy-950 border border-navy-700 rounded-lg text-sm text-white focus:border-gold-500 focus:ring-2 focus:ring-gold-500/20 focus:outline-none transition">
-                            @foreach(['pcs', 'kg', 'gram', 'meter', 'cm', 'liter', 'ml', 'roll', 'box', 'set'] as $unit)
-                                <option value="{{ $unit }}" @selected(old('unit', $item->unit) == $unit)>{{ $unit }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <x-atelier.input name="price" label="Harga per Unit (Rp)" type="number" step="0.01" :value="$item->price" />
-                    <x-atelier.input name="location" label="Lokasi Penyimpanan" :value="$item->location" />
-
-                    <div class="md:col-span-2">
-                        <label class="block text-xs font-semibold text-navy-300 uppercase tracking-wider mb-2">Supplier</label>
-                        <select name="supplier_id" class="w-full px-3 py-2.5 bg-navy-950 border border-navy-700 rounded-lg text-sm text-white focus:border-gold-500 focus:ring-2 focus:ring-gold-500/20 focus:outline-none transition">
-                            <option value="">-- Pilih Supplier (Opsional) --</option>
-                            @foreach($suppliers as $supplier)
-                                <option value="{{ $supplier->id }}" @selected(old('supplier_id', $item->supplier_id) == $supplier->id)>
-                                    {{ $supplier->kode }} — {{ $supplier->nama }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
+                    <x-atelier.input name="price" label="Harga per Satuan Beli (Rp)" type="number" step="0.01" min="0" :value="$item->price" required />
+                    <x-atelier.input name="yield_percent" label="Yield (%)" type="number" step="0.01" min="0" max="100" :value="$item->yield_percent" hint="100 = tanpa waste" />
                 </div>
             </x-atelier.card>
 
             {{-- STOK --}}
-            <x-atelier.card title="Stok" :brackets="true">
+            <x-atelier.card title="Stok & Supplier" :brackets="true">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-                    <x-atelier.input name="current_stock" label="Stok Saat Ini" type="number" step="0.01" :value="$item->current_stock" />
-                    <x-atelier.input name="min_stock" label="Stok Minimum" type="number" step="0.01" :value="$item->min_stock" />
-                    <x-atelier.input name="max_stock" label="Stok Maksimum" type="number" step="0.01" :value="$item->max_stock" />
+                    <x-atelier.input name="min_stock" label="Min Stock" type="number" step="0.01" min="0" :value="$item->min_stock" />
+                    <x-atelier.input name="max_stock" label="Max Stock" type="number" step="0.01" min="0" :value="$item->max_stock" />
+                    <x-atelier.input name="location" label="Lokasi Default" :value="$item->location" />
                 </div>
             </x-atelier.card>
 
-            {{-- CATATAN + STATUS --}}
             <x-atelier.card :brackets="true">
                 <div class="flex items-center gap-3">
                     <input type="hidden" name="is_active" value="0">
@@ -125,22 +136,25 @@
 
     @push('scripts')
     <script>
-        const defaultPhotoSvg = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='128' height='128' viewBox='0 0 24 24' fill='none' stroke='%23475569' stroke-width='1.5'%3E%3Crect x='3' y='3' width='18' height='18' rx='2'/%3E%3Ccircle cx='8.5' cy='8.5' r='1.5'/%3E%3Cpath d='M21 15l-5-5L5 21'/%3E%3C/svg%3E";
-        const originalPhotoSrc = "{{ $item->photo_url ?? '' }}";
+        function materialForm() {
+            return {
+                costingMethod: '{{ old('costing_method', $item->costing_method ?? 'per_unit') }}',
 
-        function previewPhoto(input) {
-            if (input.files && input.files[0]) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    document.getElementById('photo-preview').src = e.target.result;
-                };
-                reader.readAsDataURL(input.files[0]);
+                get needsDimension() {
+                    return ['per_area', 'per_volume', 'per_length', 'per_weight'].includes(this.costingMethod);
+                },
+
+                get methodInfo() {
+                    const info = {
+                        per_unit: { title: 'Per Unit', description: 'Beli pcs, pakai pcs', example: 'Contoh: Sekrup Rp 500/pcs' },
+                        per_area: { title: 'Per Area', description: 'Beli lembar, pakai luas', example: 'Contoh: MDF Rp 500K/lembar (2400×1200)' },
+                        per_volume: { title: 'Per Volume', description: 'Beli batang, pakai volume', example: 'Contoh: Kayu Rp 200K/batang (100×100×4000)' },
+                        per_length: { title: 'Per Panjang', description: 'Beli roll, pakai panjang', example: 'Contoh: Kabel Rp 200K/roll (100 m)' },
+                        per_weight: { title: 'Per Berat', description: 'Beli karung, pakai berat', example: 'Contoh: Tepung Rp 300K/karung (25 kg)' },
+                    };
+                    return info[this.costingMethod] || info.per_unit;
+                },
             }
-        }
-
-        function resetPhoto() {
-            document.querySelector('input[name="photo"]').value = '';
-            document.getElementById('photo-preview').src = originalPhotoSrc || defaultPhotoSvg;
         }
     </script>
     @endpush

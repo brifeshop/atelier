@@ -3,6 +3,66 @@
         <h2 class="font-serif text-2xl font-bold text-white">Detail BOM</h2>
     </x-slot>
 
+    @php
+        // Data untuk searchable dropdown item
+        $itemOptions = collect()
+            ->merge($materials->map(fn($m) => [
+                'id' => 'material_' . $m->id,
+                'label' => '[MAT] ' . ($m->kode_bahan ?? $m->kode) . ' — ' . $m->nama,
+                'data' => [
+                    'type' => 'material',
+                    'id' => (string) $m->id,
+                    'nama' => $m->nama,
+                    'kode' => $m->kode,
+                    'kode_bahan' => $m->kode_bahan,
+                    'unit' => $m->unit,
+                    'costing_method' => $m->costing_method,
+                ],
+            ]))
+            ->merge($products->map(fn($p) => [
+                'id' => 'product_' . $p->id,
+                'label' => '[SUB] ' . $p->kode . ' — ' . $p->nama,
+                'data' => [
+                    'type' => 'product',
+                    'id' => (string) $p->id,
+                    'nama' => $p->nama,
+                    'kode' => $p->kode,
+                    'unit' => 'set',
+                    'costing_method' => 'per_unit',
+                ],
+            ]))
+            ->values()
+            ->all();
+
+        // ============ KONFIGURASI DIVISI ============
+        // Ubah array ini sesuai kebutuhan industri Anda
+        $divisiOptions = [
+            'Set Up',
+            'Kayu',
+            'Offset Printing',
+            'Finishing',
+            'Perakitan',
+            'Packing',
+            'QC',
+            'Lainnya',
+        ];
+
+        // ============ KONFIGURASI SATUAN ============
+        $unitOptions = [
+            // Satuan hitung
+            'pcs', 'unit', 'set', 'lusin', 'rim',
+            // Panjang
+            'mm', 'cm', 'm',
+            // Berat
+            'gram', 'kg', 'ton',
+            // Volume
+            'ml', 'liter',
+            // Area/Volume 3D
+            'mm2', 'cm2', 'm2',
+            'mm3', 'cm3', 'm3',
+        ];
+    @endphp
+
     <div class="p-6 lg:p-8 space-y-6 grid-bg">
 
         <x-atelier.page-header
@@ -23,7 +83,7 @@
             </div>
         @endif
 
-        {{-- INFO --}}
+        {{-- INFO BOM --}}
         <x-atelier.card title="Informasi BOM" :brackets="true">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
@@ -82,53 +142,66 @@
             </div>
         </div>
 
-        {{-- ITEMS --}}
+        {{-- ITEMS TABLE --}}
         <x-atelier.card title="Komponen BOM" :brackets="true" padding="p-0">
             @if($item->items->count() > 0)
                 <div class="overflow-x-auto">
                     <table class="w-full">
                         <thead class="bg-navy-950/50 border-b border-navy-800">
                             <tr>
-                                <th class="px-5 py-3 text-left text-[10px] font-mono font-semibold text-navy-400 uppercase tracking-widest">Seq</th>
-                                <th class="px-5 py-3 text-left text-[10px] font-mono font-semibold text-navy-400 uppercase tracking-widest">Item</th>
-                                <th class="px-5 py-3 text-center text-[10px] font-mono font-semibold text-navy-400 uppercase tracking-widest">Tipe</th>
-                                <th class="px-5 py-3 text-right text-[10px] font-mono font-semibold text-navy-400 uppercase tracking-widest">Qty</th>
-                                <th class="px-5 py-3 text-right text-[10px] font-mono font-semibold text-navy-400 uppercase tracking-widest">Scrap %</th>
-                                <th class="px-5 py-3 text-right text-[10px] font-mono font-semibold text-navy-400 uppercase tracking-widest">Unit Cost</th>
-                                <th class="px-5 py-3 text-right text-[10px] font-mono font-semibold text-navy-400 uppercase tracking-widest">Total</th>
+                                <th class="px-4 py-3 text-left text-[10px] font-mono font-semibold text-navy-400 uppercase tracking-widest">Seq</th>
+                                <th class="px-4 py-3 text-left text-[10px] font-mono font-semibold text-navy-400 uppercase tracking-widest">Level</th>
+                                <th class="px-4 py-3 text-left text-[10px] font-mono font-semibold text-navy-400 uppercase tracking-widest">Item</th>
+                                <th class="px-4 py-3 text-center text-[10px] font-mono font-semibold text-navy-400 uppercase tracking-widest">Tipe</th>
+                                <th class="px-4 py-3 text-right text-[10px] font-mono font-semibold text-navy-400 uppercase tracking-widest">Qty</th>
+                                <th class="px-4 py-3 text-left text-[10px] font-mono font-semibold text-navy-400 uppercase tracking-widest">Dimensi</th>
+                                <th class="px-4 py-3 text-left text-[10px] font-mono font-semibold text-navy-400 uppercase tracking-widest">Divisi</th>
+                                <th class="px-4 py-3 text-right text-[10px] font-mono font-semibold text-navy-400 uppercase tracking-widest">Unit Cost</th>
+                                <th class="px-4 py-3 text-right text-[10px] font-mono font-semibold text-navy-400 uppercase tracking-widest">Total</th>
                                 @if($item->canEdit())
-                                    <th class="px-5 py-3 text-right text-[10px] font-mono font-semibold text-navy-400 uppercase tracking-widest">Aksi</th>
+                                    <th class="px-4 py-3 text-right text-[10px] font-mono font-semibold text-navy-400 uppercase tracking-widest">Aksi</th>
                                 @endif
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-navy-800">
                             @foreach($item->items as $bomItem)
                                 <tr class="hover:bg-navy-800/30 transition">
-                                    <td class="px-5 py-3 text-sm font-mono text-navy-500">{{ $bomItem->sequence }}</td>
-                                    <td class="px-5 py-3 text-sm">
+                                    <td class="px-4 py-3 text-sm font-mono text-navy-500">{{ $bomItem->sequence }}</td>
+                                    <td class="px-4 py-3 text-xs font-mono text-navy-500">{{ $bomItem->level ?? '-' }}</td>
+                                    <td class="px-4 py-3 text-sm">
                                         <span class="text-white font-medium">{{ $bomItem->item->nama ?? '-' }}</span>
-                                        <br><span class="text-xs font-mono text-navy-500">{{ $bomItem->item->kode ?? '-' }}</span>
+                                        <br>
+                                        <span class="text-xs font-mono text-navy-500">
+                                            {{ $bomItem->item->kode_bahan ?? $bomItem->item->kode ?? '-' }}
+                                        </span>
+                                        @if($bomItem->spesifikasi)
+                                            <br><span class="text-xs text-navy-400 italic">{{ $bomItem->spesifikasi }}</span>
+                                        @endif
                                     </td>
-                                    <td class="px-5 py-3 text-center">
+                                    <td class="px-4 py-3 text-center">
                                         <span class="inline-flex items-center text-xs px-2 py-0.5 rounded-full border {{ $bomItem->item_type_color }}">
                                             {{ $bomItem->item_type_label }}
                                         </span>
                                     </td>
-                                    <td class="px-5 py-3 text-right font-mono text-sm text-white">
+                                    <td class="px-4 py-3 text-right font-mono text-sm text-white">
                                         {{ format_angka($bomItem->qty, 4) }}
                                         <span class="text-xs text-navy-500">{{ $bomItem->unit }}</span>
+                                        @if($bomItem->scrap_percent > 0)
+                                            <br><span class="text-[10px] text-orange-400">scrap {{ $bomItem->scrap_percent }}%</span>
+                                        @endif
                                     </td>
-                                    <td class="px-5 py-3 text-right font-mono text-sm text-navy-300">
-                                        {{ $bomItem->scrap_percent > 0 ? format_angka($bomItem->scrap_percent, 2) . '%' : '-' }}
+                                    <td class="px-4 py-3 text-xs text-navy-300">
+                                        {{ $bomItem->dimension_label }}
                                     </td>
-                                    <td class="px-5 py-3 text-right font-mono text-sm text-navy-300">
+                                    <td class="px-4 py-3 text-xs text-navy-400">{{ $bomItem->divisi ?? '-' }}</td>
+                                    <td class="px-4 py-3 text-right font-mono text-sm text-navy-300">
                                         {{ format_rupiah($bomItem->unit_cost) }}
                                     </td>
-                                    <td class="px-5 py-3 text-right font-mono text-sm text-white font-semibold">
+                                    <td class="px-4 py-3 text-right font-mono text-sm text-white font-semibold">
                                         {{ format_rupiah($bomItem->total_cost) }}
                                     </td>
                                     @if($item->canEdit())
-                                        <td class="px-5 py-3 text-right">
+                                        <td class="px-4 py-3 text-right">
                                             <form method="POST" action="{{ route('engineering.boms.items.destroy', [$item, $bomItem]) }}" onsubmit="return confirm('Hapus item ini?')" class="inline">
                                                 @csrf
                                                 @method('DELETE')
@@ -152,46 +225,292 @@
         {{-- FORM ADD ITEM --}}
         @if($item->canEdit())
             <x-atelier.card title="Tambah Item" :brackets="true">
-                <form method="POST" action="{{ route('engineering.boms.items.store', $item) }}" x-data="bomItemForm()">
+                <form method="POST" action="{{ route('engineering.boms.items.store', $item) }}" 
+                      x-data="bomItemForm()">
                     @csrf
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    {{-- Hidden inputs --}}
+                    <input type="hidden" name="item_type" x-model="selectedItemType" required>
+                    <input type="hidden" name="item_id" x-model="selectedItemId" required>
+                    <input type="hidden" name="level" :value="selectedLevel" required>
+                    <input type="hidden" name="divisi" :value="selectedDivisi">
 
-                        {{-- ITEM TYPE --}}
+                    <div class="space-y-5">
+
+                        {{-- LEVEL (TOMbol) --}}
                         <div>
                             <label class="block text-xs font-semibold text-navy-300 uppercase tracking-wider mb-2">
-                                Tipe Item <span class="text-red-400">*</span>
+                                Level <span class="text-red-400">*</span>
                             </label>
-                            <select name="item_type" required x-model="itemType" @change="resetItem()"
-                                    class="w-full px-3 py-2.5 bg-navy-950 border border-navy-700 rounded-lg text-sm text-white focus:border-gold-500 focus:ring-2 focus:ring-gold-500/20 focus:outline-none transition">
-                                <option value="material">Material</option>
-                                <option value="product">Sub-Assembly (Product)</option>
-                            </select>
+                            <div class="flex flex-wrap gap-2">
+                                @for($i = 1; $i <= 6; $i++)
+                                    <button type="button"
+                                            @click="selectedLevel = 'L.{{ $i }}'"
+                                            :class="selectedLevel === 'L.{{ $i }}' 
+                                                ? 'bg-gold-500 text-navy-900 border-gold-500 shadow-lg shadow-gold-500/20' 
+                                                : 'bg-navy-950 text-navy-300 border-navy-700 hover:border-gold-500/50 hover:text-white'"
+                                            class="px-4 py-2 rounded-lg border text-sm font-mono font-semibold transition">
+                                        L.{{ $i }}
+                                    </button>
+                                @endfor
+                            </div>
+                            <p class="text-xs text-navy-500 mt-2">
+                                <span x-show="selectedLevel === 'L.1'">L.1 = Komponen langsung dari produk jadi</span>
+                                <span x-show="selectedLevel === 'L.2'">L.2 = Sub-komponen dari L.1</span>
+                                <span x-show="selectedLevel === 'L.3'">L.3 = Sub-komponen dari L.2</span>
+                                <span x-show="selectedLevel === 'L.4'">L.4 = Sub-komponen dari L.3</span>
+                                <span x-show="selectedLevel === 'L.5'">L.5 = Sub-komponen dari L.4</span>
+                                <span x-show="selectedLevel === 'L.6'">L.6 = Sub-komponen dari L.5</span>
+                            </p>
                         </div>
 
-                        {{-- ITEM SELECTOR --}}
+                        {{-- DIVISI (TOMbol) --}}
+                        <div>
+                            <label class="block text-xs font-semibold text-navy-300 uppercase tracking-wider mb-2">
+                                Divisi Pengerjaan
+                            </label>
+                            <div class="flex flex-wrap gap-2">
+                                @foreach($divisiOptions as $div)
+                                    <button type="button"
+                                            @click="selectedDivisi = selectedDivisi === '{{ $div }}' ? '' : '{{ $div }}'"
+                                            :class="selectedDivisi === '{{ $div }}' 
+                                                ? 'bg-gold-500 text-navy-900 border-gold-500 shadow-lg shadow-gold-500/20' 
+                                                : 'bg-navy-950 text-navy-300 border-navy-700 hover:border-gold-500/50 hover:text-white'"
+                                            class="px-3 py-1.5 rounded-lg border text-xs font-semibold transition">
+                                        {{ $div }}
+                                    </button>
+                                @endforeach
+                            </div>
+                            <p class="text-xs text-navy-500 mt-2">Klik untuk pilih, klik lagi untuk batal.</p>
+                        </div>
+
+                        {{-- ITEM SEARCHABLE --}}
                         <div>
                             <label class="block text-xs font-semibold text-navy-300 uppercase tracking-wider mb-2">
                                 Item <span class="text-red-400">*</span>
                             </label>
-                            <select name="item_id" required x-model="itemId"
-                                    class="w-full px-3 py-2.5 bg-navy-950 border border-navy-700 rounded-lg text-sm text-white focus:border-gold-500 focus:ring-2 focus:ring-gold-500/20 focus:outline-none transition">
-                                <option value="">-- Pilih Item --</option>
-                                <template x-for="opt in currentItems" :key="opt.id">
-                                    <option :value="opt.id" x-text="opt.label"></option>
+                            <div x-data="searchable({
+                                items: @js($itemOptions),
+                                selected: '',
+                                name: 'item_selector',
+                                onChange: (id, data) => {
+                                    selectedItemType = data.type || '';
+                                    selectedItemId = data.id || '';
+                                    onItemChange(data);
+                                }
+                            })" class="relative">
+                                <div x-ref="trigger" @click="toggle()"
+                                     class="w-full px-3 py-2.5 bg-navy-950 border border-navy-700 rounded-lg text-sm text-white cursor-pointer flex items-center justify-between"
+                                     :class="open && 'border-gold-500 ring-2 ring-gold-500/20'">
+                                    <span x-show="selectedLabel" x-text="selectedLabel" class="truncate"></span>
+                                    <span x-show="!selectedLabel" class="text-navy-500">-- Pilih Material / Sub-Assembly --</span>
+                                    <svg class="w-4 h-4 text-navy-500 flex-shrink-0" :class="open && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                    </svg>
+                                </div>
+
+                                <template x-teleport="body">
+                                    <div x-show="open" x-cloak :style="dropdownStyle"
+                                         class="bg-navy-800 border border-navy-700 rounded-lg shadow-xl overflow-hidden"
+                                         @click.away="open = false">
+                                        <div class="p-2 border-b border-navy-700">
+                                            <input type="text" x-model="search" :data-search-input="name"
+                                                   @keydown.arrow-down.prevent="highlightNext()"
+                                                   @keydown.arrow-up.prevent="highlightPrev()"
+                                                   @keydown.enter.prevent="selectHighlighted()"
+                                                   @keydown.escape="open = false"
+                                                   placeholder="Cari material / sub-assembly..."
+                                                   class="w-full px-3 py-2 bg-navy-950 border border-navy-700 rounded text-sm text-white placeholder-navy-500 focus:border-gold-500 focus:ring-0 focus:outline-none">
+                                        </div>
+                                        <div class="max-h-64 overflow-y-auto">
+                                            <template x-for="(opt, idx) in filteredItems" :key="opt.id">
+                                                <div @click="select(opt)" @mouseenter="highlighted = idx"
+                                                     :data-option-index="idx"
+                                                     class="px-3 py-2 text-sm cursor-pointer"
+                                                     :class="highlighted === idx ? 'bg-gold-500 text-navy-900' : 'text-white hover:bg-navy-700'"
+                                                     x-text="opt.label"></div>
+                                            </template>
+                                            <template x-if="filteredItems.length === 0">
+                                                <div class="px-3 py-4 text-center text-sm text-navy-500">Tidak ada hasil</div>
+                                            </template>
+                                        </div>
+                                    </div>
                                 </template>
-                            </select>
+                            </div>
+
+                            {{-- INFO ITEM TERPILIH --}}
+                            <div x-show="selectedItem" x-cloak class="mt-2 p-2 bg-navy-900/50 border border-navy-800 rounded text-xs">
+                                <div class="flex flex-wrap gap-x-4 gap-y-1 text-navy-400">
+                                    <span>Tipe: <span class="text-navy-200" x-text="selectedItemType === 'material' ? 'Material' : 'Sub-Assembly'"></span></span>
+                                    <span>Satuan beli: <span class="text-navy-200" x-text="selectedItem?.unit || '-'"></span></span>
+                                    <span>Costing: <span class="text-gold-500" x-text="selectedItem?.costing_method || '-'"></span></span>
+                                </div>
+                            </div>
                         </div>
 
-                        <x-atelier.input name="qty" label="Qty" type="number" step="0.0001" min="0.0001" required />
+                        {{-- QTY & SATUAN --}}
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            <x-atelier.input 
+                                name="qty" 
+                                label="Qty" 
+                                type="number" 
+                                step="0.0001" 
+                                min="0.0001" 
+                                :value="old('qty')" 
+                                required 
+                                hint="Jumlah pemakaian"
+                            />
 
-                        <x-atelier.input name="unit" label="Satuan" placeholder="pcs, kg, m" required />
+                            {{-- SATUAN (DROPDOWN) --}}
+                            <div>
+                                <label class="block text-xs font-semibold text-navy-300 uppercase tracking-wider mb-2">
+                                    Satuan <span class="text-red-400">*</span>
+                                </label>
+                                <div class="flex gap-2">
+                                    <select name="unit" x-model="unitValue" required
+                                            class="flex-1 px-3 py-2.5 bg-navy-950 border border-navy-700 rounded-lg text-sm text-white focus:border-gold-500 focus:ring-2 focus:ring-gold-500/20 focus:outline-none transition">
+                                        <option value="">-- Pilih Satuan --</option>
+                                        <optgroup label="Hitung">
+                                            <option value="pcs">pcs</option>
+                                            <option value="unit">unit</option>
+                                            <option value="set">set</option>
+                                            <option value="lusin">lusin</option>
+                                            <option value="rim">rim</option>
+                                        </optgroup>
+                                        <optgroup label="Panjang">
+                                            <option value="mm">mm</option>
+                                            <option value="cm">cm</option>
+                                            <option value="m">m</option>
+                                        </optgroup>
+                                        <optgroup label="Berat">
+                                            <option value="gram">gram</option>
+                                            <option value="kg">kg</option>
+                                            <option value="ton">ton</option>
+                                        </optgroup>
+                                        <optgroup label="Volume">
+                                            <option value="ml">ml</option>
+                                            <option value="liter">liter</option>
+                                        </optgroup>
+                                        <optgroup label="Area">
+                                            <option value="mm2">mm²</option>
+                                            <option value="cm2">cm²</option>
+                                            <option value="m2">m²</option>
+                                        </optgroup>
+                                        <optgroup label="Volume 3D">
+                                            <option value="mm3">mm³</option>
+                                            <option value="cm3">cm³</option>
+                                            <option value="m3">m³</option>
+                                        </optgroup>
+                                    </select>
+                                    {{-- Tombol reset ke auto-fill --}}
+                                    <button type="button"
+                                            x-show="autoFilledUnit && unitValue !== selectedItem?.unit"
+                                            @click="unitValue = selectedItem?.unit"
+                                            class="px-3 py-2 bg-navy-800 border border-navy-700 rounded-lg text-xs text-navy-300 hover:text-gold-500 hover:border-gold-500/50 transition"
+                                            title="Reset ke satuan material">
+                                        ↺
+                                    </button>
+                                </div>
+                                <p class="text-xs text-navy-500 mt-1">
+                                    <span x-show="autoFilledUnit && unitValue === selectedItem?.unit" class="text-green-400">✓ Auto-fill dari material</span>
+                                    <span x-show="autoFilledUnit && unitValue !== selectedItem?.unit" class="text-orange-400">✎ Diubah manual</span>
+                                    <span x-show="!autoFilledUnit">Pilih satuan pakai di BOM</span>
+                                </p>
+                            </div>
+                        </div>
 
-                        <x-atelier.input name="scrap_percent" label="Scrap %" type="number" step="0.01" min="0" max="100" hint="Opsional, % waste" />
+                        {{-- SPESIFIKASI --}}
+                        <div>
+                            <label class="block text-xs font-semibold text-navy-300 uppercase tracking-wider mb-2">Spesifikasi</label>
+                            <textarea name="spesifikasi" rows="1" placeholder="164 x 120 x 18 mm; Cokelat Single Corrugated"
+                                      class="w-full px-3 py-2.5 bg-navy-950 border border-navy-700 rounded-lg text-sm text-white placeholder-navy-500 focus:border-gold-500 focus:ring-2 focus:ring-gold-500/20 focus:outline-none transition">{{ old('spesifikasi') }}</textarea>
+                        </div>
 
-                        <div class="md:col-span-2">
-                            <label class="block text-xs font-semibold text-navy-300 uppercase tracking-wider mb-2">Catatan</label>
-                            <textarea name="notes" rows="2" placeholder="Catatan..." class="w-full px-3 py-2.5 bg-navy-950 border border-navy-700 rounded-lg text-sm text-white placeholder-navy-500 focus:border-gold-500 focus:ring-2 focus:ring-gold-500/20 focus:outline-none transition"></textarea>
+                        {{-- INFO DIMENSI --}}
+                        <div x-show="needsDimension" x-cloak class="p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg text-xs text-blue-300">
+                            <p class="font-semibold mb-1">
+                                ℹ️ Material ini pakai costing method: 
+                                <span class="text-gold-500" x-text="selectedItem?.costing_method"></span>
+                            </p>
+                            <p class="text-blue-400" x-text="dimensionHint"></p>
+                        </div>
+
+                        {{-- DIMENSI PAKAI --}}
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            <template x-if="needsArea || needsVolume || needsLength">
+                                <div>
+                                    <x-atelier.input 
+                                        name="panjang_pakai" 
+                                        label="Panjang Pakai (mm)" 
+                                        type="number" 
+                                        step="0.01" 
+                                        min="0"
+                                        :value="old('panjang_pakai')" 
+                                        placeholder="200"
+                                    />
+                                </div>
+                            </template>
+
+                            <template x-if="needsArea || needsVolume">
+                                <div>
+                                    <x-atelier.input 
+                                        name="lebar_pakai" 
+                                        label="Lebar Pakai (mm)" 
+                                        type="number" 
+                                        step="0.01" 
+                                        min="0"
+                                        :value="old('lebar_pakai')" 
+                                        placeholder="100"
+                                    />
+                                </div>
+                            </template>
+
+                            <template x-if="needsVolume">
+                                <div>
+                                    <x-atelier.input 
+                                        name="tinggi_pakai" 
+                                        label="Tinggi/Tebal Pakai (mm)" 
+                                        type="number" 
+                                        step="0.01" 
+                                        min="0"
+                                        :value="old('tinggi_pakai')" 
+                                        placeholder="8"
+                                    />
+                                </div>
+                            </template>
+
+                            <template x-if="needsWeight">
+                                <div>
+                                    <x-atelier.input 
+                                        name="berat_pakai" 
+                                        label="Berat Pakai (gram)" 
+                                        type="number" 
+                                        step="0.01" 
+                                        min="0"
+                                        :value="old('berat_pakai')" 
+                                        placeholder="250"
+                                    />
+                                </div>
+                            </template>
+                        </div>
+
+                        {{-- SCRAP & NOTES --}}
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            <x-atelier.input 
+                                name="scrap_percent" 
+                                label="Scrap %" 
+                                type="number" 
+                                step="0.01" 
+                                min="0" 
+                                max="100"
+                                :value="old('scrap_percent', 0)" 
+                                hint="Waste proses produksi (opsional)"
+                            />
+
+                            <div>
+                                <label class="block text-xs font-semibold text-navy-300 uppercase tracking-wider mb-2">Catatan</label>
+                                <textarea name="notes" rows="2" placeholder="Catatan..." class="w-full px-3 py-2.5 bg-navy-950 border border-navy-700 rounded-lg text-sm text-white placeholder-navy-500 focus:border-gold-500 focus:ring-2 focus:ring-gold-500/20 focus:outline-none transition">{{ old('notes') }}</textarea>
+                            </div>
                         </div>
                     </div>
 
@@ -238,23 +557,157 @@
 
     @push('scripts')
     <script>
-        const materials = @js($materials ?? []);
-        const products = @js($products ?? []);
-
-        function bomItemForm() {
+        // ============ SEARCHABLE DROPDOWN ============
+        function searchable({ items, selected, name, onChange = null }) {
             return {
-                itemType: 'material',
-                itemId: '',
+                items: items,
+                selected: selected || '',
+                search: '',
+                open: false,
+                highlighted: 0,
+                name: name,
+                onChange: onChange,
+                dropdownStyle: '',
 
-                get currentItems() {
-                    if (this.itemType === 'material') {
-                        return materials.map(m => ({ id: m.id, label: `[MAT] ${m.kode} — ${m.nama}` }));
-                    }
-                    return products.map(p => ({ id: p.id, label: `[PRD] ${p.kode} — ${p.nama}` }));
+                get filteredItems() {
+                    if (!this.search) return this.items;
+                    const q = this.search.toLowerCase();
+                    return this.items.filter(i => i.label.toLowerCase().includes(q));
                 },
 
-                resetItem() {
-                    this.itemId = '';
+                get selectedLabel() {
+                    const item = this.items.find(i => i.id === this.selected);
+                    return item ? item.label : '';
+                },
+
+                toggle() {
+                    this.open = !this.open;
+                    if (this.open) {
+                        this.search = '';
+                        this.highlighted = 0;
+                        this.$nextTick(() => {
+                            this.updatePosition();
+                            setTimeout(() => {
+                                const input = document.querySelector(`[data-search-input="${this.name}"]`);
+                                if (input) input.focus();
+                            }, 10);
+                        });
+                    }
+                },
+
+                updatePosition() {
+                    const trigger = this.$refs.trigger;
+                    if (!trigger) return;
+                    const rect = trigger.getBoundingClientRect();
+                    const dropdownHeight = 320;
+                    const spaceBelow = window.innerHeight - rect.bottom;
+                    const spaceAbove = rect.top;
+
+                    let top, maxHeight;
+
+                    if (spaceBelow >= dropdownHeight || spaceBelow >= spaceAbove) {
+                        top = rect.bottom + 4;
+                        maxHeight = Math.min(dropdownHeight, spaceBelow - 20);
+                    } else {
+                        maxHeight = Math.min(dropdownHeight, spaceAbove - 20);
+                        top = rect.top - maxHeight - 4;
+                    }
+
+                    this.dropdownStyle = `
+                        position: fixed;
+                        top: ${top}px;
+                        left: ${rect.left}px;
+                        width: ${rect.width}px;
+                        z-index: 9999;
+                    `;
+                },
+
+                select(opt) {
+                    this.selected = opt.id;
+                    this.open = false;
+                    if (this.onChange) this.onChange(opt.id, opt.data || {});
+                },
+
+                highlightNext() {
+                    if (this.highlighted < this.filteredItems.length - 1) this.highlighted++;
+                    this.scrollToHighlighted();
+                },
+                highlightPrev() {
+                    if (this.highlighted > 0) this.highlighted--;
+                    this.scrollToHighlighted();
+                },
+                scrollToHighlighted() {
+                    this.$nextTick(() => {
+                        const el = document.querySelector(`[data-option-index="${this.highlighted}"]`);
+                        if (el) el.scrollIntoView({ block: 'nearest' });
+                    });
+                },
+                selectHighlighted() {
+                    if (this.filteredItems[this.highlighted]) {
+                        this.select(this.filteredItems[this.highlighted]);
+                    }
+                },
+            }
+        }
+
+        // ============ BOM ITEM FORM ============
+        function bomItemForm() {
+            return {
+                // State
+                selectedLevel: 'L.1',
+                selectedDivisi: '',
+                selectedItemType: '',
+                selectedItemId: '',
+                selectedItem: null,
+                unitValue: '',
+                autoFilledUnit: false,
+
+                // ============ EVENTS ============
+                onItemChange(data) {
+                    this.selectedItem = data;
+
+                    // Auto-fill satuan
+                    if (data.unit) {
+                        this.unitValue = data.unit;
+                        this.autoFilledUnit = true;
+                    } else {
+                        this.autoFilledUnit = false;
+                    }
+                },
+
+                // ============ COMPUTED ============
+                get costingMethod() {
+                    if (this.selectedItemType !== 'material') return 'per_unit';
+                    return this.selectedItem?.costing_method || 'per_unit';
+                },
+
+                get needsDimension() {
+                    return ['per_area', 'per_volume', 'per_length', 'per_weight'].includes(this.costingMethod);
+                },
+
+                get needsArea() {
+                    return ['per_area', 'per_volume'].includes(this.costingMethod);
+                },
+
+                get needsVolume() {
+                    return this.costingMethod === 'per_volume';
+                },
+
+                get needsLength() {
+                    return this.costingMethod === 'per_length';
+                },
+
+                get needsWeight() {
+                    return this.costingMethod === 'per_weight';
+                },
+
+                get dimensionHint() {
+                    return {
+                        per_area: 'Isi Panjang & Lebar potongan (mm).',
+                        per_volume: 'Isi Panjang, Lebar & Tinggi potongan (mm).',
+                        per_length: 'Isi Panjang potongan (mm).',
+                        per_weight: 'Isi Berat pakai (gram).',
+                    }[this.costingMethod] || '';
                 },
             }
         }

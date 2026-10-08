@@ -97,8 +97,8 @@ class BomController extends Controller
 
         return view('engineering.boms.show', [
             'item'      => $bom,
-            'materials' => \App\Models\Master\Material::active()->orderBy('nama')->get(),
-            'products'  => \App\Models\Master\Product::active()
+            'materials' => Material::active()->orderBy('nama')->get(),
+            'products'  => Product::active()
                 ->where('id', '!=', $bom->product_id)
                 ->orderBy('nama')
                 ->get(),
@@ -215,12 +215,23 @@ class BomController extends Controller
         }
 
         $validated = $request->validate([
-            'item_type'      => 'required|in:material,product',
-            'item_id'        => 'required|integer',
-            'qty'            => 'required|numeric|min:0.0001',
-            'unit'           => 'required|string|max:20',
-            'scrap_percent'  => 'nullable|numeric|min:0|max:100',
-            'notes'          => 'nullable|string',
+            'item_type'         => 'required|in:material,product',
+            'item_id'           => 'required|integer',
+            'qty'               => 'required|numeric|min:0.0001',
+            'unit'              => 'required|string|max:20',
+            // Spesifikasi & hierarki
+            'spesifikasi'       => 'nullable|string',
+            'divisi'            => 'nullable|string|max:100',
+            'level'             => 'nullable|string|max:20',
+            // Dimensi pakai
+            'panjang_pakai'     => 'nullable|numeric|min:0',
+            'lebar_pakai'       => 'nullable|numeric|min:0',
+            'tinggi_pakai'      => 'nullable|numeric|min:0',
+            'berat_pakai'       => 'nullable|numeric|min:0',
+            'volume_pakai'      => 'nullable|numeric|min:0',
+            // Lainnya
+            'scrap_percent'     => 'nullable|numeric|min:0|max:100',
+            'notes'             => 'nullable|string',
         ]);
 
         // Cegah circular reference
@@ -228,33 +239,55 @@ class BomController extends Controller
             return back()->with('error', 'Produk tidak boleh menjadi komponen dirinya sendiri.');
         }
 
-        $maxSeq = $bom->items()->max('sequence') ?? 0;
+        // Ambil material atau product
+        $itemModel = $validated['item_type'] === 'material'
+            ? Material::find($validated['item_id'])
+            : Product::find($validated['item_id']);
 
-        // Ambil unit_cost
-        $unitCost = 0;
-        if ($validated['item_type'] === 'material') {
-            $material = Material::find($validated['item_id']);
-            $unitCost = $material ? (float) $material->price : 0;
-        } else {
-            $product = Product::find($validated['item_id']);
-            $unitCost = $product ? (float) $product->selling_price : 0;
+        if (!$itemModel) {
+            return back()->with('error', 'Item tidak ditemukan.');
         }
 
-        $scrap = $validated['scrap_percent'] ?? 0;
-        $totalCost = $validated['qty'] * $unitCost * (1 + ($scrap / 100));
+        $maxSeq = $bom->items()->max('sequence') ?? 0;
 
-        BomItem::create([
-            'bom_id'         => $bom->id,
-            'sequence'       => $maxSeq + 1,
-            'item_type'      => $validated['item_type'],
-            'item_id'        => $validated['item_id'],
-            'qty'            => $validated['qty'],
-            'unit'           => $validated['unit'],
-            'scrap_percent'  => $scrap,
-            'unit_cost'      => $unitCost,
-            'total_cost'     => $totalCost,
-            'notes'          => $validated['notes'] ?? null,
-        ]);
+        // Buat BomItem dengan fillable
+        $bomItem = new BomItem();
+        $bomItem->bom_id         = $bom->id;
+        $bomItem->sequence       = $maxSeq + 1;
+        $bomItem->item_type      = $validated['item_type'];
+        $bomItem->item_id        = $validated['item_id'];
+        $bomItem->qty            = $validated['qty'];
+        $bomItem->unit           = $validated['unit'];
+        $bomItem->spesifikasi    = $validated['spesifikasi'] ?? null;
+        $bomItem->divisi         = $validated['divisi'] ?? null;
+        $bomItem->level          = $validated['level'] ?? null;
+        $bomItem->panjang_pakai  = $validated['panjang_pakai'] ?? null;
+        $bomItem->lebar_pakai    = $validated['lebar_pakai'] ?? null;
+        $bomItem->tinggi_pakai   = $validated['tinggi_pakai'] ?? null;
+        $bomItem->berat_pakai    = $validated['berat_pakai'] ?? null;
+        $bomItem->volume_pakai   = $validated['volume_pakai'] ?? null;
+        $bomItem->scrap_percent  = $validated['scrap_percent'] ?? 0;
+        $bomItem->notes          = $validated['notes'] ?? null;
+
+        // Hitung cost
+        if ($validated['item_type'] === 'material') {
+            $cost = BomService::calculateItemCost($bomItem, $itemModel);
+            $bomItem->unit_cost  = $cost['unit_cost'];
+            $bomItem->total_cost = $cost['total_cost'];
+        } else {
+            // Sub-assembly: pakai cost dari BOM aktif
+            $subBom = Bom::where('product_id', $itemModel->id)
+                ->where('status', 'active')
+                ->latest('effective_date')
+                ->first();
+
+            $unitCost = $subBom ? (float) $subBom->total_cost : (float) ($itemModel->selling_price ?? 0);
+            $scrapMultiplier = 1 + ((float) $bomItem->scrap_percent / 100);
+            $bomItem->unit_cost  = $unitCost;
+            $bomItem->total_cost = (float) $bomItem->qty * $unitCost * $scrapMultiplier;
+        }
+
+        $bomItem->save();
 
         // Recalculate BOM cost
         BomService::updateCost($bom);
@@ -271,23 +304,46 @@ class BomController extends Controller
         }
 
         $validated = $request->validate([
-            'qty'            => 'required|numeric|min:0.0001',
-            'unit'           => 'required|string|max:20',
-            'scrap_percent'  => 'nullable|numeric|min:0|max:100',
-            'notes'          => 'nullable|string',
+            'qty'               => 'required|numeric|min:0.0001',
+            'unit'              => 'required|string|max:20',
+            'spesifikasi'       => 'nullable|string',
+            'divisi'            => 'nullable|string|max:100',
+            'level'             => 'nullable|string|max:20',
+            'panjang_pakai'     => 'nullable|numeric|min:0',
+            'lebar_pakai'       => 'nullable|numeric|min:0',
+            'tinggi_pakai'      => 'nullable|numeric|min:0',
+            'berat_pakai'       => 'nullable|numeric|min:0',
+            'volume_pakai'      => 'nullable|numeric|min:0',
+            'scrap_percent'     => 'nullable|numeric|min:0|max:100',
+            'notes'             => 'nullable|string',
         ]);
 
-        $scrap = $validated['scrap_percent'] ?? 0;
-        $totalCost = $validated['qty'] * $item->unit_cost * (1 + ($scrap / 100));
+        $item->update($validated);
 
-        $item->update([
-            'qty'            => $validated['qty'],
-            'unit'           => $validated['unit'],
-            'scrap_percent'  => $scrap,
-            'total_cost'     => $totalCost,
-            'notes'          => $validated['notes'] ?? null,
-        ]);
+        // Recalculate cost untuk item ini
+        if ($item->item_type === 'material' && $item->item) {
+            $cost = BomService::calculateItemCost($item, $item->item);
+            $item->update([
+                'unit_cost'  => $cost['unit_cost'],
+                'total_cost' => $cost['total_cost'],
+            ]);
+        } elseif ($item->item_type === 'product' && $item->item) {
+            // Sub-assembly
+            $subBom = Bom::where('product_id', $item->item_id)
+                ->where('status', 'active')
+                ->latest('effective_date')
+                ->first();
 
+            $unitCost = $subBom ? (float) $subBom->total_cost : (float) ($item->item->selling_price ?? 0);
+            $scrapMultiplier = 1 + ((float) $item->scrap_percent / 100);
+
+            $item->update([
+                'unit_cost'  => $unitCost,
+                'total_cost' => (float) $item->qty * $unitCost * $scrapMultiplier,
+            ]);
+        }
+
+        // Recalculate BOM cost total
         BomService::updateCost($bom);
 
         return back()->with('success', 'Item berhasil diperbarui.');
