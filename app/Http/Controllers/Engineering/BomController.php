@@ -349,6 +349,41 @@ class BomController extends Controller
         return back()->with('success', 'Item berhasil diperbarui.');
     }
 
+    /**
+     * Tambah header group (bukan item)
+     */
+    public function addHeader(Request $request, Bom $bom)
+    {
+        if (!$bom->canEdit()) {
+            return back()->with('error', 'BOM yang sudah aktif tidak bisa diubah.');
+        }
+
+        $validated = $request->validate([
+            'header_label' => 'required|string|max:255',
+            'level'        => 'nullable|string|max:20',
+            'divisi'       => 'nullable|string|max:100',
+        ]);
+
+        $maxSeq = $bom->items()->max('sequence') ?? 0;
+
+        BomItem::create([
+            'bom_id'         => $bom->id,
+            'sequence'       => $maxSeq + 1,
+            'is_header'      => true,
+            'header_label'   => $validated['header_label'],
+            'level'          => $validated['level'] ?? null,
+            'divisi'         => $validated['divisi'] ?? null,
+            'item_type'      => 'material', // default, tidak dipakai
+            'item_id'        => 0,          // default, tidak dipakai
+            'qty'            => 0,
+            'unit'           => '-',
+            'unit_cost'      => 0,
+            'total_cost'     => 0,
+        ]);
+
+        return back()->with('success', 'Header group berhasil ditambahkan.');
+    }
+
     public function removeItem(Bom $bom, BomItem $item)
     {
         abort_if($item->bom_id !== $bom->id, 404);

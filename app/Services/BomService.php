@@ -25,6 +25,11 @@ class BomService
         $totalMaterial = 0;
 
         foreach ($bom->items as $item) {
+            // Skip header group — tidak dihitung
+            if ($item->is_header) {
+                continue;
+            }
+
             // Kalau item adalah material → hitung langsung
             if ($item->item_type === 'material') {
                 $material = Material::find($item->item_id);

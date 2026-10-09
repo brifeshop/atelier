@@ -21,6 +21,8 @@ class BomItem extends Model
         'spesifikasi',          // ← TAMBAH
         'divisi',               // ← TAMBAH
         'level',                // ← TAMBAH
+        'is_header',          // ← TAMBAH
+        'header_label',       // ← TAMBAH
         'panjang_pakai',        // ← TAMBAH
         'lebar_pakai',          // ← TAMBAH
         'tinggi_pakai',         // ← TAMBAH
@@ -41,7 +43,8 @@ class BomItem extends Model
         'lebar_pakai'     => 'decimal:4',       // ← TAMBAH
         'tinggi_pakai'    => 'decimal:4',       // ← TAMBAH
         'berat_pakai'     => 'decimal:4',       // ← TAMBAH
-        'volume_pakai'    => 'decimal:4',       // ← TAMBAH
+        'volume_pakai'    => 'decimal:4',    
+        'is_header'       => 'boolean',        // ← TAMBAH
     ];
 
     // ============ RELASI ============
@@ -126,6 +129,25 @@ class BomItem extends Model
     {
         return $this->panjang_pakai || $this->lebar_pakai || $this->tinggi_pakai
             || $this->berat_pakai || $this->volume_pakai;
+    }
+
+    /**
+     * Cek apakah header group
+     */
+    public function getIsHeaderGroupAttribute(): bool
+    {
+        return $this->is_header === true;
+    }
+
+    /**
+     * Label untuk tampilan
+     */
+    public function getDisplayLabelAttribute(): string
+    {
+        if ($this->is_header) {
+            return $this->header_label ?? 'Group';
+        }
+        return $this->item->nama ?? '-';
     }
 
     // ============ HELPER ============

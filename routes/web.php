@@ -31,6 +31,7 @@ use App\Http\Controllers\Purchasing\SupplierEvaluationController;
 
 use App\Http\Controllers\Engineering\BomController;
 use App\Http\Controllers\Engineering\RoutingController;
+use App\Http\Controllers\Engineering\BomImportController;
 
 use App\Http\Controllers\Production\WorkOrderController;
 use App\Http\Controllers\Production\CostingController;
@@ -168,8 +169,15 @@ Route::middleware(['auth'])->group(function () {
 });
 
 // ==================== ENGINEERING ====================
-Route::middleware(['auth', 'verified'])->prefix('engineering')->name('engineering.')->group(function () {
-    // BOM
+    Route::middleware(['auth', 'verified'])->prefix('engineering')->name('engineering.')->group(function () {
+        // BOM
+        // BOM Import — HARUS sebelum resource
+    Route::get('boms/{bom}/import', [BomImportController::class, 'index'])->name('boms.import');
+    Route::get('boms/{bom}/import/template', [BomImportController::class, 'template'])->name('boms.import.template');
+    Route::post('boms/{bom}/import/preview', [BomImportController::class, 'preview'])->name('boms.import.preview');
+    Route::post('boms/{bom}/import/store', [BomImportController::class, 'store'])->name('boms.import.store');
+
+    Route::resource('boms', BomController::class);
     Route::resource('boms', BomController::class);
     Route::patch('boms/{bom}/activate', [BomController::class, 'activate'])
         ->name('boms.activate');
@@ -183,6 +191,8 @@ Route::middleware(['auth', 'verified'])->prefix('engineering')->name('engineerin
         ->name('boms.items.update');
     Route::delete('boms/{bom}/items/{item}', [BomController::class, 'removeItem'])
         ->name('boms.items.destroy');
+    Route::post('boms/{bom}/headers', [BomController::class, 'addHeader'])
+    ->name('boms.headers.store');
 
     // Routing
     Route::resource('routings', RoutingController::class);
