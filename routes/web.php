@@ -37,6 +37,7 @@ use App\Http\Controllers\Production\WorkOrderController;
 use App\Http\Controllers\Production\CostingController;
 use App\Http\Controllers\Production\MaterialIssueController;
 use App\Http\Controllers\Production\WorkOrderProgressController;
+use App\Http\Controllers\Production\FinishedGoodsReceiptController;
 
 use Illuminate\Support\Facades\Route;
 
@@ -251,6 +252,15 @@ Route::middleware(['auth', 'verified'])->prefix('production')->name('production.
     Route::patch('material-issues/{material_issue}/issue', [MaterialIssueController::class, 'issue'])
         ->name('material-issues.issue');
     Route::resource('material-issues', MaterialIssueController::class)
+        ->only(['index', 'create', 'store', 'show', 'destroy']);
+
+    // ============ FINISHED GOODS RECEIPT ============
+    // Custom route SEBELUM resource
+    Route::get('finished-goods/get-locations/{warehouse}', [FinishedGoodsReceiptController::class, 'getLocations'])
+        ->name('finished-goods.get-locations');
+    Route::patch('finished-goods/{finished_good}/receive', [FinishedGoodsReceiptController::class, 'receive'])
+        ->name('finished-goods.receive');
+    Route::resource('finished-goods', FinishedGoodsReceiptController::class)
         ->only(['index', 'create', 'store', 'show', 'destroy']);
 
     // ============ COSTING ============
