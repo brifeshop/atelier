@@ -98,7 +98,7 @@ class WorkOrderService
                 'qty'            => round($requiredQty, 4),
                 'unit'           => $bomItem->unit,
                 'scrap_percent'  => $bomItem->scrap_percent,
-                'unit_cost'      => (float) $material->price,
+                'unit_cost'      => (float) $bomItem->unit_cost,
             ];
 
             return $result;

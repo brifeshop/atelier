@@ -58,18 +58,20 @@ class WorkOrderProgress extends Model
     }
 
     public function calculateCost(): array
-    {
-        $wc = $this->workCenter;
-        if (!$wc) return ['labor_cost' => 0, 'overhead_cost' => 0, 'total_cost' => 0];
+        {
+            $wc = $this->workCenter;
+            if (!$wc) {
+                return ['labor_cost' => 0, 'overhead_cost' => 0, 'total_cost' => 0];
+            }
 
-        $hours = $this->actual_minutes / 60;
-        $laborCost = $hours * (float) $wc->hourly_rate;
-        $overheadCost = $hours * (float) $wc->overhead_rate;
+            $hours = (float) $this->actual_minutes / 60;
+            $laborCost = $hours * (float) $wc->hourly_rate;
+            $overheadCost = $hours * (float) $wc->overhead_rate;
 
-        return [
-            'labor_cost'    => round($laborCost, 2),
-            'overhead_cost' => round($overheadCost, 2),
-            'total_cost'    => round($laborCost + $overheadCost, 2),
-        ];
-    }
+            return [
+                'labor_cost'    => round($laborCost, 2),
+                'overhead_cost' => round($overheadCost, 2),
+                'total_cost'    => round($laborCost + $overheadCost, 2),
+            ];
+        }
 }

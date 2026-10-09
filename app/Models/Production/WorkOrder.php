@@ -152,6 +152,21 @@ class WorkOrder extends Model
         return max(0, $this->planned_qty - $this->actual_qty);
     }
 
+    public function finishedGoodsReceipts()
+    {
+        return $this->hasMany(FinishedGoodsReceipt::class);
+    }
+
+    /**
+     * Total qty good dari semua FG Receipt
+     */
+    public function getTotalFgrQtyAttribute(): float
+    {
+        return (float) $this->finishedGoodsReceipts()
+            ->where('status', 'received')
+            ->sum('qty_good');
+    }
+
     // ============ HELPER ============
     public static function generateNumber(): string
     {
@@ -166,7 +181,7 @@ class WorkOrder extends Model
     }
 
     public function canEdit(): bool { return $this->status === 'draft'; }
-    public function canRelease(): bool { return $this->status === 'draft' && $this->materials()->count() > 0; }
+    public function canRelease(): bool{    return $this->status === 'draft' && $this->bom_id !== null;}
     public function canStart(): bool { return $this->status === 'released'; }
     public function canComplete(): bool { return $this->status === 'in_progress'; }
     public function canCancel(): bool { return in_array($this->status, ['draft', 'released']); }

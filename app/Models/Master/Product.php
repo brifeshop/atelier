@@ -49,6 +49,11 @@ class Product extends Model
         return $this->hasMany(\App\Models\Production\WorkOrder::class);
     }
 
+    public function finishedGoodsReceipts()
+    {
+        return $this->hasMany(\App\Models\Production\FinishedGoodsReceipt::class);
+    }
+
     /**
      * Scope: hanya product aktif
      */

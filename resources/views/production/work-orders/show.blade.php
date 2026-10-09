@@ -269,6 +269,12 @@
                         <x-atelier.button type="submit" variant="primary">Mulai Produksi</x-atelier.button>
                     </form>
                 @endif
+                
+                @if($item->status === 'in_progress')
+                    <x-atelier.button :href="route('production.work-orders.progress', $item)" variant="primary">
+                        📝 Input Progress
+                    </x-atelier.button>
+                @endif
 
                 @if($item->canComplete())
                     <form method="POST" action="{{ route('production.work-orders.complete', $item) }}" onsubmit="return confirm('Selesaikan WO ini?')">

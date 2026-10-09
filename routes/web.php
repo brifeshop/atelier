@@ -35,6 +35,8 @@ use App\Http\Controllers\Engineering\BomImportController;
 
 use App\Http\Controllers\Production\WorkOrderController;
 use App\Http\Controllers\Production\CostingController;
+use App\Http\Controllers\Production\MaterialIssueController;
+use App\Http\Controllers\Production\WorkOrderProgressController;
 
 use Illuminate\Support\Facades\Route;
 
@@ -169,15 +171,14 @@ Route::middleware(['auth'])->group(function () {
 });
 
 // ==================== ENGINEERING ====================
-    Route::middleware(['auth', 'verified'])->prefix('engineering')->name('engineering.')->group(function () {
-        // BOM
-        // BOM Import — HARUS sebelum resource
+Route::middleware(['auth', 'verified'])->prefix('engineering')->name('engineering.')->group(function () {
+    // ============ BOM IMPORT — HARUS SEBELUM RESOURCE ============
     Route::get('boms/{bom}/import', [BomImportController::class, 'index'])->name('boms.import');
     Route::get('boms/{bom}/import/template', [BomImportController::class, 'template'])->name('boms.import.template');
     Route::post('boms/{bom}/import/preview', [BomImportController::class, 'preview'])->name('boms.import.preview');
     Route::post('boms/{bom}/import/store', [BomImportController::class, 'store'])->name('boms.import.store');
 
-    Route::resource('boms', BomController::class);
+    // ============ BOM ============
     Route::resource('boms', BomController::class);
     Route::patch('boms/{bom}/activate', [BomController::class, 'activate'])
         ->name('boms.activate');
@@ -192,9 +193,9 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('boms/{bom}/items/{item}', [BomController::class, 'removeItem'])
         ->name('boms.items.destroy');
     Route::post('boms/{bom}/headers', [BomController::class, 'addHeader'])
-    ->name('boms.headers.store');
+        ->name('boms.headers.store');
 
-    // Routing
+    // ============ ROUTING ============
     Route::resource('routings', RoutingController::class);
     Route::patch('routings/{routing}/activate', [RoutingController::class, 'activate'])
         ->name('routings.activate');
@@ -212,7 +213,7 @@ Route::middleware(['auth'])->group(function () {
 
 // ==================== PRODUCTION ====================
 Route::middleware(['auth', 'verified'])->prefix('production')->name('production.')->group(function () {
-    // Work Orders
+    // ============ WORK ORDERS ============
     Route::resource('work-orders', WorkOrderController::class);
     Route::patch('work-orders/{work_order}/release', [WorkOrderController::class, 'release'])
         ->name('work-orders.release');
@@ -224,17 +225,40 @@ Route::middleware(['auth', 'verified'])->prefix('production')->name('production.
         ->name('work-orders.cancel');
     Route::post('work-orders/{work_order}/recalculate', [WorkOrderController::class, 'recalculate'])
         ->name('work-orders.recalculate');
+    Route::post('work-orders/{work_order}/snapshot', [WorkOrderController::class, 'snapshot'])
+        ->name('work-orders.snapshot');
 
-    // Costing
+    // Work Order Progress
+    Route::get('work-orders/{work_order}/progress', [WorkOrderProgressController::class, 'index'])
+        ->name('work-orders.progress');
+    Route::patch('work-orders/{work_order}/progress/bulk', [WorkOrderProgressController::class, 'bulkUpdate'])
+        ->name('work-orders.progress.bulk');
+    Route::patch('work-orders/{work_order}/progress/{progress}', [WorkOrderProgressController::class, 'update'])
+        ->name('work-orders.progress.update');
+    Route::patch('work-orders/{work_order}/progress/{progress}/start', [WorkOrderProgressController::class, 'start'])
+        ->name('work-orders.progress.start');
+    Route::patch('work-orders/{work_order}/progress/{progress}/complete', [WorkOrderProgressController::class, 'complete'])
+        ->name('work-orders.progress.complete');
+
+    // ============ API: Work Order Materials ============
+    Route::get('work-orders/{work_order}/materials', [MaterialIssueController::class, 'getWorkOrderMaterials'])
+        ->name('work-orders.materials');
+
+    // ============ MATERIAL ISSUES ============
+    // Custom route SEBELUM resource
+    Route::get('material-issues/get-locations', [MaterialIssueController::class, 'getMaterialLocations'])
+        ->name('material-issues.get-locations');
+    Route::patch('material-issues/{material_issue}/issue', [MaterialIssueController::class, 'issue'])
+        ->name('material-issues.issue');
+    Route::resource('material-issues', MaterialIssueController::class)
+        ->only(['index', 'create', 'store', 'show', 'destroy']);
+
+    // ============ COSTING ============
     Route::get('costing', [CostingController::class, 'index'])->name('costing.index');
     Route::get('costing/variance', [CostingController::class, 'variance'])->name('costing.variance');
     Route::get('costing/margin', [CostingController::class, 'margin'])->name('costing.margin');
     Route::get('costing/{cost_snapshot}', [CostingController::class, 'show'])->name('costing.show');
     Route::get('costing-export', [CostingController::class, 'export'])->name('costing.export');
-
-    // Snapshot manual dari WO
-    Route::post('work-orders/{work_order}/snapshot', [WorkOrderController::class, 'snapshot'])
-        ->name('work-orders.snapshot');
 });
 
 require __DIR__.'/auth.php';
